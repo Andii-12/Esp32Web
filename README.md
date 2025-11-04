@@ -52,6 +52,36 @@ EspWeb/
 - MongoDB (local installation or MongoDB Atlas)
 - npm or yarn
 
+### Environment variables
+
+Backend (local dev): `backend/.env`
+```
+PORT=5000
+MONGODB_URI=mongodb://localhost:27017/esp32data
+JWT_SECRET=change_me
+NODE_ENV=development
+# Optional: require ESP32 to include X-API-Key header
+API_KEY=
+# Optional CORS allow-list (set to your frontend origin in production)
+FRONTEND_URL=
+```
+
+Backend (production example for Railway):
+```
+PORT=8080
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>/esp32data?retryWrites=true&w=majority
+JWT_SECRET=<strong_random_secret>
+NODE_ENV=production
+API_KEY=<set_a_secret_key_for_esp32>
+FRONTEND_URL=https://your-frontend.vercel.app
+```
+
+Frontend (Vercel) – add env var:
+```
+REACT_APP_API_BASE=https://your-backend.railway.app
+```
+This repo configures Axios to use `REACT_APP_API_BASE` if present; otherwise it falls back to same-origin for local dev.
+
 ### Backend Setup
 
 1. Navigate to the backend directory:

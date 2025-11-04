@@ -121,6 +121,13 @@ router.post('/', auth, async (req, res) => {
 // Public endpoint for ESP32 to send data (for mesh network - admin ESP32 sends collected data)
 router.post('/public', async (req, res) => {
   try {
+    // Optional API key check (enabled if API_KEY is set)
+    if (process.env.API_KEY) {
+      const provided = req.header('x-api-key') || req.header('X-API-Key');
+      if (!provided || provided !== process.env.API_KEY) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+    }
     const { 
       nodeId, 
       adminId, 
@@ -175,6 +182,13 @@ router.post('/public', async (req, res) => {
 // Batch endpoint for admin ESP32 to send multiple sensor readings at once
 router.post('/public/batch', async (req, res) => {
   try {
+    // Optional API key check (enabled if API_KEY is set)
+    if (process.env.API_KEY) {
+      const provided = req.header('x-api-key') || req.header('X-API-Key');
+      if (!provided || provided !== process.env.API_KEY) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+    }
     const { adminId, sensorData } = req.body;
 
     if (!adminId) {
@@ -249,6 +263,13 @@ router.post('/public/batch', async (req, res) => {
 // Endpoint for room-based ESP32 code (accepts room_id format)
 router.post('/public/room', async (req, res) => {
   try {
+    // Optional API key check (enabled if API_KEY is set)
+    if (process.env.API_KEY) {
+      const provided = req.header('x-api-key') || req.header('X-API-Key');
+      if (!provided || provided !== process.env.API_KEY) {
+        return res.status(401).json({ message: 'Unauthorized' });
+      }
+    }
     // Log incoming request for debugging
     console.log('\n=== ESP32 Data Received ===');
     console.log('Timestamp:', new Date().toISOString());
