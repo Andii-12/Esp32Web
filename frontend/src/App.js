@@ -7,8 +7,14 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
-  const { isAuthenticated } = useAuth();
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  const { isAuthenticated, loading } = useAuth();
+  
+  // Wait for auth check to complete before redirecting
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+  
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
 function App() {

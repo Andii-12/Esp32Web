@@ -13,6 +13,7 @@ const Dashboard = () => {
   const [refreshInterval, setRefreshInterval] = useState(null);
 
   useEffect(() => {
+    console.log('[Dashboard] Component mounted, starting data fetch...');
     fetchData();
     fetchLatestDataAllNodes();
 
@@ -22,22 +23,34 @@ const Dashboard = () => {
     }, 1000);
 
     setRefreshInterval(interval);
+    console.log('[Dashboard] Auto-refresh interval started (1 second)');
 
     return () => {
       if (interval) clearInterval(interval);
+      console.log('[Dashboard] Component unmounted, interval cleared');
     };
   }, [nodeId]);
 
   const fetchData = async () => {
     try {
       setLoading(true);
+      console.log('[Dashboard] Fetching data history...', { nodeId });
       const params = nodeId ? { nodeId, limit: 50 } : { limit: 50 };
       const response = await axios.get('/api/esp32', { params });
+      console.log('[Dashboard] Data history received:', {
+        count: response.data.data?.length || 0,
+        data: response.data.data
+      });
       setData(response.data.data);
       setError('');
     } catch (err) {
       setError('Failed to fetch data. Please try again.');
-      console.error('Error fetching data:', err);
+      console.error('[Dashboard] ❌ Error fetching data:', err);
+      console.error('[Dashboard] Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
     } finally {
       setLoading(false);
     }
@@ -45,11 +58,37 @@ const Dashboard = () => {
 
   const fetchLatestDataAllNodes = async () => {
     try {
+      console.log('[Dashboard] Fetching latest data from all nodes...');
       const response = await axios.get('/api/esp32/latest/all-nodes');
-      setLatestDataAllNodes(response.data.data || []);
+      const data = response.data.data || [];
+      
+      console.log('[Dashboard] Received data:', {
+        count: data.length,
+        nodes: data.map(d => ({ nodeId: d.nodeId, temperature: d.temperature, timestamp: d.timestamp }))
+      });
+      
+      if (data.length > 0) {
+        console.log('[Dashboard] ✅ ESP32 data is coming!');
+        data.forEach(node => {
+          console.log(`[Dashboard] Node ${node.nodeId}:`, {
+            temperature: node.temperature,
+            humidity: node.humidity,
+            timestamp: node.timestamp,
+            isOnline: isRoomOnline(node.nodeId)
+          });
+        });
+      } else {
+        console.log('[Dashboard] ⚠️ No ESP32 data received yet');
+      }
+      
+      setLatestDataAllNodes(data);
     } catch (err) {
-      // Silently fail for latest data to avoid spam
-      console.error('Error fetching latest data:', err);
+      console.error('[Dashboard] ❌ Error fetching latest data:', err);
+      console.error('[Dashboard] Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
     }
   };
 

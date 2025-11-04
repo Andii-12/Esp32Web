@@ -17,13 +17,24 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log('[Auth] Checking authentication...');
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     
     if (token && userData) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      try {
+        const user = JSON.parse(userData);
+        setIsAuthenticated(true);
+        setUser(user);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        console.log('[Auth] ✅ User authenticated:', user.username);
+      } catch (error) {
+        console.error('[Auth] Error parsing user data:', error);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+    } else {
+      console.log('[Auth] ⚠️ No token or user data found');
     }
     setLoading(false);
   }, []);
@@ -77,11 +88,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('[Auth] Logging out...');
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     delete axios.defaults.headers.common['Authorization'];
     setIsAuthenticated(false);
     setUser(null);
+    console.log('[Auth] ✅ Logged out');
   };
 
   return (
