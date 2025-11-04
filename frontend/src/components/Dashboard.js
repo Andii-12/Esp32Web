@@ -63,6 +63,16 @@ const Dashboard = () => {
     return date.toLocaleString();
   };
 
+  // Check if room is online (data received within last 10 seconds)
+  const isRoomOnline = (nodeId) => {
+    const roomData = latestDataAllNodes.find(n => n.nodeId === nodeId);
+    if (!roomData) return false;
+    const now = new Date();
+    const dataTime = new Date(roomData.timestamp || roomData.receivedAt);
+    const diffSeconds = (now - dataTime) / 1000;
+    return diffSeconds < 10; // Online if data received within last 10 seconds
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -94,67 +104,125 @@ const Dashboard = () => {
 
         {error && <div className="error-message">{error}</div>}
 
-        {latestDataAllNodes.length > 0 && (
-          <div className="mesh-nodes-section">
-            <h2>Mesh Network - Latest Data from All Nodes</h2>
-            <div className="nodes-grid">
-              {latestDataAllNodes.map((nodeData) => (
-                <div key={nodeData.nodeId} className="node-card">
-                  <div className="node-header">
-                    <h3>{nodeData.nodeId}</h3>
-                    {nodeData.adminId && (
-                      <span className="admin-badge">via {nodeData.adminId}</span>
-                    )}
-                  </div>
-                  <div className="node-data-grid">
-                    {nodeData.temperature !== undefined && (
-                      <div className="data-item">
-                        <span className="data-label">🌡️ Temperature:</span>
-                        <span className="data-value">{nodeData.temperature.toFixed(1)}°C</span>
-                      </div>
-                    )}
-                    {nodeData.humidity !== undefined && (
-                      <div className="data-item">
-                        <span className="data-label">💧 Humidity:</span>
-                        <span className="data-value">{nodeData.humidity.toFixed(1)}%</span>
-                      </div>
-                    )}
-                    {nodeData.gas !== undefined && (
-                      <div className="data-item">
-                        <span className="data-label">💨 Gas:</span>
-                        <span className="data-value">{nodeData.gas.toFixed(1)}%</span>
-                      </div>
-                    )}
-                    {nodeData.waterLevel !== undefined && (
-                      <div className="data-item">
-                        <span className="data-label">🌊 Water Level:</span>
-                        <span className="data-value">{nodeData.waterLevel.toFixed(1)}%</span>
-                      </div>
-                    )}
-                    {nodeData.motion !== undefined && (
-                      <div className="data-item">
-                        <span className="data-label">🚶 Motion:</span>
-                        <span className={`data-value ${nodeData.motion ? 'motion-detected' : ''}`}>
-                          {nodeData.motion ? 'Detected' : 'None'}
-                        </span>
-                      </div>
-                    )}
-                    {nodeData.soilMoisture !== undefined && (
-                      <div className="data-item">
-                        <span className="data-label">🌱 Soil Moisture:</span>
-                        <span className="data-value">{nodeData.soilMoisture.toFixed(1)}%</span>
-                      </div>
-                    )}
-                    <div className="data-item">
-                      <span className="data-label">🕐 Timestamp:</span>
-                      <span className="data-value-small">{formatDate(nodeData.timestamp)}</span>
+        {/* Admin Section */}
+        <div className="admin-section">
+          <div className="admin-header">
+            <h2>Admin</h2>
+            <span className="status-badge online">Online</span>
+          </div>
+          <div className="admin-info">
+            <p>Admin ESP32 Receiver Status</p>
+            <p className="admin-id">Admin ID: ADMIN_001</p>
+          </div>
+        </div>
+
+        {/* Room Sections */}
+        <div className="rooms-section">
+          <h2>Sensor Rooms</h2>
+          <div className="rooms-grid">
+            {/* Room 1 */}
+            <div className="room-card">
+              <div className="room-header">
+                <h3>Room 1</h3>
+                <span className={`status-badge ${isRoomOnline('ROOM_1') ? 'online' : 'offline'}`}>
+                  {isRoomOnline('ROOM_1') ? '🟢 Online' : '🔴 Offline'}
+                </span>
+              </div>
+              {(() => {
+                const room1Data = latestDataAllNodes.find(n => n.nodeId === 'ROOM_1');
+                return room1Data ? (
+                  <div className="room-data">
+                    <div className="sensor-row">
+                      <span className="sensor-label">🌡️ Temperature:</span>
+                      <span className="sensor-value">{room1Data.temperature !== undefined ? room1Data.temperature.toFixed(1) + '°C' : 'N/A'}</span>
+                    </div>
+                    <div className="sensor-row">
+                      <span className="sensor-label">💧 Humidity:</span>
+                      <span className="sensor-value">{room1Data.humidity !== undefined ? room1Data.humidity.toFixed(1) + '%' : 'N/A'}</span>
+                    </div>
+                    <div className="sensor-row">
+                      <span className="sensor-label">💨 Gas:</span>
+                      <span className="sensor-value">{room1Data.gas !== undefined ? room1Data.gas.toFixed(1) + '%' : 'N/A'}</span>
+                    </div>
+                    <div className="sensor-row">
+                      <span className="sensor-label">🌊 Water Level:</span>
+                      <span className="sensor-value">{room1Data.waterLevel !== undefined ? room1Data.waterLevel.toFixed(1) + '%' : 'N/A'}</span>
+                    </div>
+                    <div className="sensor-row">
+                      <span className="sensor-label">🚶 Motion:</span>
+                      <span className={`sensor-value ${room1Data.motion ? 'motion-detected' : ''}`}>
+                        {room1Data.motion ? 'Detected' : 'None'}
+                      </span>
+                    </div>
+                    <div className="sensor-row">
+                      <span className="sensor-label">🌱 Soil Moisture:</span>
+                      <span className="sensor-value">{room1Data.soilMoisture !== undefined ? room1Data.soilMoisture.toFixed(1) + '%' : 'N/A'}</span>
+                    </div>
+                    <div className="sensor-row timestamp-row">
+                      <span className="sensor-label">🕐 Last Update:</span>
+                      <span className="sensor-value-small">{formatDate(room1Data.timestamp)}</span>
                     </div>
                   </div>
-                </div>
-              ))}
+                ) : (
+                  <div className="room-data">
+                    <p className="no-room-data">No data received from Room 1</p>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Room 2 */}
+            <div className="room-card">
+              <div className="room-header">
+                <h3>Room 2</h3>
+                <span className={`status-badge ${isRoomOnline('ROOM_2') ? 'online' : 'offline'}`}>
+                  {isRoomOnline('ROOM_2') ? '🟢 Online' : '🔴 Offline'}
+                </span>
+              </div>
+              {(() => {
+                const room2Data = latestDataAllNodes.find(n => n.nodeId === 'ROOM_2');
+                return room2Data ? (
+                  <div className="room-data">
+                    <div className="sensor-row">
+                      <span className="sensor-label">🌡️ Temperature:</span>
+                      <span className="sensor-value">{room2Data.temperature !== undefined ? room2Data.temperature.toFixed(1) + '°C' : 'N/A'}</span>
+                    </div>
+                    <div className="sensor-row">
+                      <span className="sensor-label">💧 Humidity:</span>
+                      <span className="sensor-value">{room2Data.humidity !== undefined ? room2Data.humidity.toFixed(1) + '%' : 'N/A'}</span>
+                    </div>
+                    <div className="sensor-row">
+                      <span className="sensor-label">💨 Gas:</span>
+                      <span className="sensor-value">{room2Data.gas !== undefined ? room2Data.gas.toFixed(1) + '%' : 'N/A'}</span>
+                    </div>
+                    <div className="sensor-row">
+                      <span className="sensor-label">🌊 Water Level:</span>
+                      <span className="sensor-value">{room2Data.waterLevel !== undefined ? room2Data.waterLevel.toFixed(1) + '%' : 'N/A'}</span>
+                    </div>
+                    <div className="sensor-row">
+                      <span className="sensor-label">🚶 Motion:</span>
+                      <span className={`sensor-value ${room2Data.motion ? 'motion-detected' : ''}`}>
+                        {room2Data.motion ? 'Detected' : 'None'}
+                      </span>
+                    </div>
+                    <div className="sensor-row">
+                      <span className="sensor-label">🌱 Soil Moisture:</span>
+                      <span className="sensor-value">{room2Data.soilMoisture !== undefined ? room2Data.soilMoisture.toFixed(1) + '%' : 'N/A'}</span>
+                    </div>
+                    <div className="sensor-row timestamp-row">
+                      <span className="sensor-label">🕐 Last Update:</span>
+                      <span className="sensor-value-small">{formatDate(room2Data.timestamp)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="room-data">
+                    <p className="no-room-data">No data received from Room 2</p>
+                  </div>
+                );
+              })()}
             </div>
           </div>
-        )}
+        </div>
 
         <div className="data-history">
           <h2>Data History</h2>
@@ -203,4 +271,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
+
 
