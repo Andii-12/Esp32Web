@@ -8,7 +8,23 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+// Configure CORS for production deployments (Railway + Vercel)
+const allowedOrigin = process.env.FRONTEND_URL || undefined; // undefined -> reflect request origin in dev
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin like curl/postman or if FRONTEND_URL not set
+    if (!origin || !allowedOrigin) return callback(null, true);
+    if (origin === allowedOrigin) return callback(null, true);
+    // Also allow localhost for local dev convenience
+    if (origin === 'http://localhost:3000' || origin === 'http://127.0.0.1:3000') return callback(null, true);
+    return callback(new Error('Not allowed by CORS'), false);
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+  credentials: false,
+};
+app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 app.use(express.json());
 
 // Request logging middleware (for debugging)
