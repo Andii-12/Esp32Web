@@ -81,6 +81,8 @@ void sendToWeb(const struct_message& m) {
   // Check WiFi connection
   if (WiFi.status() != WL_CONNECTED) {
     Serial.println("⚠️ WiFi not connected, cannot send to web");
+    // Try to reconnect WiFi
+    wifiConnect();
     return;
   }
 
@@ -89,15 +91,35 @@ void sendToWeb(const struct_message& m) {
   Serial.println(m.room_id);
 
   WiFiClientSecure client;
-  client.setInsecure(); // Skip certificate validation for simplicity
-
+  
+  // Set insecure mode for Railway HTTPS (Railway uses Let's Encrypt certs)
+  client.setInsecure();
+  
+  // Set timeout
+  client.setTimeout(15);
+  
   HTTPClient http;
   
   Serial.print("Connecting to: ");
   Serial.println(SERVER_URL);
   
-  if (!http.begin(client, SERVER_URL)) {
-    Serial.println("❌ HTTP begin failed");
+  // Try to begin connection with retries
+  int beginAttempts = 0;
+  bool httpBeginSuccess = false;
+  
+  while (beginAttempts < 3 && !httpBeginSuccess) {
+    httpBeginSuccess = http.begin(client, SERVER_URL);
+    if (!httpBeginSuccess) {
+      beginAttempts++;
+      Serial.print("HTTP begin attempt ");
+      Serial.print(beginAttempts);
+      Serial.println(" failed, retrying...");
+      delay(500);
+    }
+  }
+  
+  if (!httpBeginSuccess) {
+    Serial.println("❌ HTTP begin failed after 3 attempts");
     return;
   }
 
@@ -108,7 +130,8 @@ void sendToWeb(const struct_message& m) {
     Serial.println(API_KEY);
   }
   
-  http.setTimeout(10000); // 10 second timeout
+  http.setTimeout(15000); // 15 second timeout
+  http.setReuse(false); // Don't reuse connection
 
   String body = "{";
   body += "\"room_id\":"      + String(m.room_id)      + ",";
@@ -123,7 +146,24 @@ void sendToWeb(const struct_message& m) {
   Serial.print("Payload: ");
   Serial.println(body);
 
-  int code = http.POST(body);
+  // Try POST with retries
+  int code = -1;
+  int postAttempts = 0;
+  
+  while (postAttempts < 3 && code <= 0) {
+    code = http.POST(body);
+    postAttempts++;
+    
+    if (code <= 0) {
+      Serial.print("POST attempt ");
+      Serial.print(postAttempts);
+      Serial.print(" failed with code: ");
+      Serial.println(code);
+      if (postAttempts < 3) {
+        delay(1000);
+      }
+    }
+  }
   
   Serial.print("HTTP Response Code: ");
   Serial.println(code);
@@ -142,13 +182,29 @@ void sendToWeb(const struct_message& m) {
       Serial.println(response);
     }
   } else {
-    Serial.print("❌ POST failed: ");
+    Serial.print("❌ POST failed after 3 attempts: ");
     Serial.println(http.errorToString(code));
+    Serial.println("Error code: " + String(code));
     Serial.println("Check:");
-    Serial.println("  1. Server URL is correct");
-    Serial.println("  2. Server is running");
-    Serial.println("  3. WiFi is connected");
-    Serial.println("  4. API key is correct (if used)");
+    Serial.println("  1. Server URL is correct: " + String(SERVER_URL));
+    Serial.println("  2. Server is running and accessible");
+    Serial.println("  3. WiFi is connected: " + String(WiFi.status() == WL_CONNECTED ? "YES" : "NO"));
+    Serial.println("  4. WiFi IP: " + WiFi.localIP().toString());
+    Serial.println("  5. API key is correct (if used)");
+    
+    // Test basic connectivity
+    Serial.println("\nTesting server connectivity...");
+    HTTPClient testHttp;
+    WiFiClientSecure testClient;
+    testClient.setInsecure();
+    if (testHttp.begin(testClient, SERVER_URL)) {
+      int testCode = testHttp.GET();
+      Serial.print("Test GET response: ");
+      Serial.println(testCode);
+      testHttp.end();
+    } else {
+      Serial.println("Test connection failed");
+    }
   }
 
   http.end();
