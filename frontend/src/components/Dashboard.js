@@ -16,10 +16,10 @@ const Dashboard = () => {
     fetchData();
     fetchLatestDataAllNodes();
 
-    // Auto-refresh every 5 seconds
+    // Auto-refresh every 1 second for real-time updates
     const interval = setInterval(() => {
       fetchLatestDataAllNodes();
-    }, 5000);
+    }, 1000);
 
     setRefreshInterval(interval);
 
