@@ -31,8 +31,18 @@ app.use(express.json());
 app.use((req, res, next) => {
   if (req.path.startsWith('/api/esp32')) {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    console.log('Headers:', JSON.stringify(req.headers, null, 2));
   }
   next();
+});
+
+// Health check endpoint (for testing connectivity)
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    message: 'Server is running'
+  });
 });
 
 // Routes

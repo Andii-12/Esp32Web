@@ -270,6 +270,7 @@ router.post('/public/room', async (req, res) => {
     if (process.env.API_KEY) {
       const provided = req.header('x-api-key') || req.header('X-API-Key');
       if (!provided || provided !== process.env.API_KEY) {
+        console.log('❌ API Key mismatch or missing');
         return res.status(401).json({ message: 'Unauthorized' });
       }
     }
@@ -293,21 +294,10 @@ router.post('/public/room', async (req, res) => {
       return res.status(400).json({ message: 'room_id is required' });
     }
 
-    // Convert room format to our database format
-    const esp32Data = new Esp32Data({
-      nodeId: `ROOM_${room_id}`,  // Convert room_id to nodeId format
-      adminId: 'ADMIN_001',        // Default admin ID
-      temperature,
-      humidity,
-      motion: motion === 1,        // Convert 0/1 to boolean
-      gas: gas === 1,              // Convert 0/1 to boolean
-      waterLevel: rain === 1 ? 100 : 0,  // Map rain (0=dry, 1=wet) to waterLevel
-      timestamp: ts ? new Date(ts) : new Date(),
-      receivedAt: new Date()
-    });
+    const nodeId = `ROOM_${room_id}`;  // Convert room_id to nodeId format
+    const adminId = 'ADMIN_001';        // Default admin ID
 
     // Store in memory for real-time display (no MongoDB save)
-    const nodeId = `ROOM_${room_id}`;
     realTimeDataStore.set(nodeId, {
       nodeId: nodeId,
       adminId: 'ADMIN_001',

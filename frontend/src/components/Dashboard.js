@@ -147,11 +147,16 @@ const Dashboard = () => {
         <div className="admin-section">
           <div className="admin-header">
             <h2>Admin</h2>
-            <span className="status-badge online">Online</span>
+            <span className={`status-badge ${isAdminOnline() ? 'online' : 'offline'}`}>
+              {isAdminOnline() ? '🟢 Online' : '🔴 Offline'}
+            </span>
           </div>
           <div className="admin-info">
             <p>Admin ESP32 Receiver Status</p>
             <p className="admin-id">Admin ID: ADMIN_001</p>
+            {!isAdminOnline() && latestDataAllNodes.length === 0 && (
+              <p style={{ color: '#dc3545', marginTop: '10px' }}>⚠️ No data received from ESP32</p>
+            )}
           </div>
         </div>
 
