@@ -112,6 +112,18 @@ const Dashboard = () => {
     return diffSeconds < 10; // Online if data received within last 10 seconds
   };
 
+  // Check if Admin is online (any room has sent data within last 15 seconds)
+  const isAdminOnline = () => {
+    if (latestDataAllNodes.length === 0) return false;
+    const now = new Date();
+    const hasRecentData = latestDataAllNodes.some(roomData => {
+      const dataTime = new Date(roomData.timestamp || roomData.receivedAt);
+      const diffSeconds = (now - dataTime) / 1000;
+      return diffSeconds < 15; // Admin online if any room sent data within last 15 seconds
+    });
+    return hasRecentData;
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
