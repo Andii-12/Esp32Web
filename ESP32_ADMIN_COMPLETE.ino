@@ -55,24 +55,84 @@ void drawSignal(int x, int y, bool active) {
 
 // -------- WiFi --------
 void wifiConnect() {
+  // Disconnect if already connected to a different network
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("WiFi already connected, checking status...");
+    Serial.print("Current IP: ");
+    Serial.println(WiFi.localIP());
+    return;
+  }
+  
   Serial.print("Connecting to WiFi: ");
   Serial.println(WIFI_SSID);
+  Serial.print("Password: ");
+  Serial.println(WIFI_PASS);
   
-  unsigned long start = millis();
+  // Disconnect previous connection
+  WiFi.disconnect();
+  delay(100);
+  
+  // Set WiFi mode to station
+  WiFi.mode(WIFI_STA);
+  
+  // Start connection
   WiFi.begin(WIFI_SSID, WIFI_PASS);
   
-  while (WiFi.status() != WL_CONNECTED && (millis() - start) < 15000) {
-    delay(300);
-    Serial.print(".");
+  unsigned long start = millis();
+  int attempts = 0;
+  
+  while (WiFi.status() != WL_CONNECTED && (millis() - start) < 30000) {
+    delay(500);
+    attempts++;
+    if (attempts % 4 == 0) {
+      Serial.print(".");
+    }
+    
+    // Check connection status
+    wl_status_t status = WiFi.status();
+    if (status == WL_NO_SSID_AVAIL) {
+      Serial.println("\n❌ Error: SSID not found!");
+      Serial.println("Check WiFi SSID spelling: " + String(WIFI_SSID));
+      return;
+    } else if (status == WL_CONNECT_FAILED) {
+      Serial.println("\n❌ Error: Connection failed!");
+      Serial.println("Check WiFi credentials and signal strength.");
+      Serial.println("Possible issues:");
+      Serial.println("  - Wrong WiFi password");
+      Serial.println("  - WiFi signal too weak");
+      Serial.println("  - Router blocking device");
+      return;
+    } else if (status == WL_DISCONNECTED) {
+      // Still trying to connect, continue
+    }
   }
   
   Serial.println();
   
   if (WiFi.status() == WL_CONNECTED) {
-    Serial.print("✅ WiFi connected. IP: ");
+    Serial.println("✅ WiFi connected successfully!");
+    Serial.print("IP Address: ");
     Serial.println(WiFi.localIP());
+    Serial.print("Subnet Mask: ");
+    Serial.println(WiFi.subnetMask());
+    Serial.print("Gateway: ");
+    Serial.println(WiFi.gatewayIP());
+    Serial.print("RSSI (Signal Strength): ");
+    Serial.print(WiFi.RSSI());
+    Serial.println(" dBm");
+    
+    // Note: WiFi.ping() is not available in all ESP32 versions
+    // If you need to test connectivity, use HTTPClient to ping a server
+    Serial.println("✅ WiFi connected - ready for internet access");
   } else {
-    Serial.println("❌ WiFi connect timeout (ESP-NOW continues).");
+    Serial.println("❌ WiFi connect timeout after 30 seconds");
+    Serial.println("Status code: " + String(WiFi.status()));
+    Serial.println("Troubleshooting:");
+    Serial.println("  1. Check WiFi SSID: " + String(WIFI_SSID));
+    Serial.println("  2. Check WiFi password");
+    Serial.println("  3. Check if WiFi is 2.4GHz (ESP32 doesn't support 5GHz)");
+    Serial.println("  4. Move ESP32 closer to WiFi router");
+    Serial.println("  5. Check if router allows new devices");
   }
 }
 
@@ -80,10 +140,16 @@ void wifiConnect() {
 void sendToWeb(const struct_message& m) {
   // Check WiFi connection
   if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("⚠️ WiFi not connected, cannot send to web");
+    Serial.println("⚠️ WiFi not connected, attempting to reconnect...");
     // Try to reconnect WiFi
     wifiConnect();
-    return;
+    
+    // Check again after reconnection attempt
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("❌ WiFi still not connected. Data cannot be sent to web server.");
+      Serial.println("ESP-NOW data received but not forwarded.");
+      return;
+    }
   }
 
   Serial.println("\n=== Sending to Web Server ===");
@@ -284,9 +350,24 @@ void setup() {
   // Then connect WiFi (for internet posting)
   wifiConnect();
   
+  // If WiFi failed, try again after a delay
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("\nRetrying WiFi connection in 5 seconds...");
+    delay(5000);
+    wifiConnect();
+  }
+  
   Serial.println("========================================");
   Serial.println("Setup complete!");
-  Serial.println("Waiting for ESP-NOW data...");
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("✅ WiFi: Connected");
+    Serial.println("✅ ESP-NOW: Ready");
+    Serial.println("✅ Ready to send data to web server");
+  } else {
+    Serial.println("⚠️ WiFi: Not connected (ESP-NOW will still work)");
+    Serial.println("⚠️ Cannot send data to web server without WiFi");
+    Serial.println("ESP-NOW data will be received but not forwarded to web");
+  }
   Serial.println("========================================\n");
 }
 
