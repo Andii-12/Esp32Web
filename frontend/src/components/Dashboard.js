@@ -9,7 +9,6 @@ const Dashboard = () => {
   const [latestDataAllNodes, setLatestDataAllNodes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [nodeId, setNodeId] = useState('');
   const [refreshInterval, setRefreshInterval] = useState(null);
 
   useEffect(() => {
@@ -29,13 +28,13 @@ const Dashboard = () => {
       if (interval) clearInterval(interval);
       console.log('[Dashboard] Component unmounted, interval cleared');
     };
-  }, [nodeId]);
+  }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
-      console.log('[Dashboard] Fetching data history...', { nodeId });
-      const params = nodeId ? { nodeId, limit: 50 } : { limit: 50 };
+      console.log('[Dashboard] Fetching data history...');
+      const params = { limit: 50 };
       const response = await axios.get('/api/esp32', { params });
       console.log('[Dashboard] Data history received:', {
         count: response.data.data?.length || 0,
@@ -92,11 +91,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleNodeFilter = () => {
-    fetchData();
-    fetchLatestDataAllNodes();
-  };
-
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString();
@@ -137,22 +131,6 @@ const Dashboard = () => {
       </header>
 
       <div className="dashboard-content">
-        <div className="filter-section">
-          <input
-            type="text"
-            placeholder="Filter by Node ID (leave empty for all nodes)"
-            value={nodeId}
-            onChange={(e) => setNodeId(e.target.value)}
-            className="filter-input"
-          />
-          <button onClick={handleNodeFilter} className="filter-button">
-            Filter
-          </button>
-          <button onClick={fetchData} className="refresh-button">
-            Refresh
-          </button>
-        </div>
-
         {error && <div className="error-message">{error}</div>}
 
         {/* Admin Section */}
