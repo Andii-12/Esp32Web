@@ -175,7 +175,17 @@ const Dashboard = () => {
             {/* Room 1 */}
             <div className="room-card">
               <div className="room-header">
-                <h3>Room 1</h3>
+                <div>
+                  <h3>Room 1</h3>
+                  {(() => {
+                    const room1Data = latestDataAllNodes.find(n => n.nodeId === 'ROOM_1');
+                    return room1Data && room1Data.battery !== undefined ? (
+                      <p className="room-battery">
+                        🔋 {typeof room1Data.battery === 'number' ? room1Data.battery.toFixed(0) + '%' : 'N/A'}
+                      </p>
+                    ) : null;
+                  })()}
+                </div>
                 <span className={`status-badge ${isRoomOnline('ROOM_1') ? 'online' : 'offline'}`}>
                   {isRoomOnline('ROOM_1') ? '🟢 Online' : '🔴 Offline'}
                 </span>
@@ -224,14 +234,6 @@ const Dashboard = () => {
                         {room1Data.motion ? 'Detected' : 'None'}
                       </span>
                     </div>
-                    {room1Data.battery !== undefined && (
-                      <div className="sensor-row">
-                        <span className="sensor-label">🔋 Battery:</span>
-                        <span className={`sensor-value ${room1Data.battery < 20 ? 'motion-detected' : ''}`}>
-                          {typeof room1Data.battery === 'number' ? room1Data.battery.toFixed(0) + '%' : 'N/A'}
-                        </span>
-                      </div>
-                    )}
                     <div className="sensor-row timestamp-row">
                       <span className="sensor-label">🕐 Last Update:</span>
                       <span className="sensor-value-small">{formatDate(room1Data.timestamp)}</span>
@@ -248,7 +250,17 @@ const Dashboard = () => {
             {/* Room 2 */}
             <div className="room-card">
               <div className="room-header">
-                <h3>Room 2</h3>
+                <div>
+                  <h3>Room 2</h3>
+                  {(() => {
+                    const room2Data = latestDataAllNodes.find(n => n.nodeId === 'ROOM_2');
+                    return room2Data && room2Data.battery !== undefined ? (
+                      <p className="room-battery">
+                        🔋 {typeof room2Data.battery === 'number' ? room2Data.battery.toFixed(0) + '%' : 'N/A'}
+                      </p>
+                    ) : null;
+                  })()}
+                </div>
                 <span className={`status-badge ${isRoomOnline('ROOM_2') ? 'online' : 'offline'}`}>
                   {isRoomOnline('ROOM_2') ? '🟢 Online' : '🔴 Offline'}
                 </span>
@@ -297,14 +309,6 @@ const Dashboard = () => {
                         {room2Data.motion ? 'Detected' : 'None'}
                       </span>
                     </div>
-                    {room2Data.battery !== undefined && (
-                      <div className="sensor-row">
-                        <span className="sensor-label">🔋 Battery:</span>
-                        <span className={`sensor-value ${room2Data.battery < 20 ? 'motion-detected' : ''}`}>
-                          {typeof room2Data.battery === 'number' ? room2Data.battery.toFixed(0) + '%' : 'N/A'}
-                        </span>
-                      </div>
-                    )}
                     <div className="sensor-row timestamp-row">
                       <span className="sensor-label">🕐 Last Update:</span>
                       <span className="sensor-value-small">{formatDate(room2Data.timestamp)}</span>
