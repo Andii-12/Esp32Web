@@ -224,6 +224,14 @@ const Dashboard = () => {
                         {room1Data.motion ? 'Detected' : 'None'}
                       </span>
                     </div>
+                    {room1Data.battery !== undefined && (
+                      <div className="sensor-row">
+                        <span className="sensor-label">🔋 Battery:</span>
+                        <span className={`sensor-value ${room1Data.battery < 20 ? 'motion-detected' : ''}`}>
+                          {typeof room1Data.battery === 'number' ? room1Data.battery.toFixed(0) + '%' : 'N/A'}
+                        </span>
+                      </div>
+                    )}
                     <div className="sensor-row timestamp-row">
                       <span className="sensor-label">🕐 Last Update:</span>
                       <span className="sensor-value-small">{formatDate(room1Data.timestamp)}</span>
@@ -289,6 +297,14 @@ const Dashboard = () => {
                         {room2Data.motion ? 'Detected' : 'None'}
                       </span>
                     </div>
+                    {room2Data.battery !== undefined && (
+                      <div className="sensor-row">
+                        <span className="sensor-label">🔋 Battery:</span>
+                        <span className={`sensor-value ${room2Data.battery < 20 ? 'motion-detected' : ''}`}>
+                          {typeof room2Data.battery === 'number' ? room2Data.battery.toFixed(0) + '%' : 'N/A'}
+                        </span>
+                      </div>
+                    )}
                     <div className="sensor-row timestamp-row">
                       <span className="sensor-label">🕐 Last Update:</span>
                       <span className="sensor-value-small">{formatDate(room2Data.timestamp)}</span>
@@ -322,6 +338,7 @@ const Dashboard = () => {
                     <th>Gas</th>
                     <th>Water Sensor</th>
                     <th>Motion</th>
+                    <th>Battery</th>
                     <th>Timestamp</th>
                   </tr>
                 </thead>
@@ -345,6 +362,7 @@ const Dashboard = () => {
                           : '-'}
                       </td>
                       <td>{item.motion !== undefined ? (item.motion ? 'Yes' : 'No') : '-'}</td>
+                      <td>{item.battery !== undefined && typeof item.battery === 'number' ? `${item.battery.toFixed(0)}%` : '-'}</td>
                       <td>{formatDate(item.timestamp)}</td>
                     </tr>
                   ))}

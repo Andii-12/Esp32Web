@@ -34,6 +34,35 @@ DHT dht(DHTPIN, DHTTYPE);
 bool wifiConnected = false;
 bool lastSendSuccess = false;
 
+// Battery reading (if connected to battery via voltage divider on ADC pin)
+// If not using battery, set BATTERY_PIN to -1 to disable
+#define BATTERY_PIN 34  // ADC1_CH6 (GPIO34) - Change to your battery voltage divider pin, or -1 to disable
+#define BATTERY_MIN_VOLTAGE 3.0  // Minimum battery voltage (empty)
+#define BATTERY_MAX_VOLTAGE 4.2  // Maximum battery voltage (full)
+#define BATTERY_DIVIDER_RATIO 2.0  // Voltage divider ratio (if using 2:1 divider, change accordingly)
+
+// Read battery percentage
+float readBatteryPercentage() {
+  #if BATTERY_PIN >= 0
+    // Read analog value (0-4095 for 12-bit ADC)
+    int analogValue = analogRead(BATTERY_PIN);
+    
+    // Convert to voltage (ESP32 ADC is 12-bit, Vref = 3.3V)
+    float voltage = (analogValue / 4095.0) * 3.3 * BATTERY_DIVIDER_RATIO;
+    
+    // Convert voltage to percentage (linear mapping)
+    float percentage = ((voltage - BATTERY_MIN_VOLTAGE) / (BATTERY_MAX_VOLTAGE - BATTERY_MIN_VOLTAGE)) * 100.0;
+    
+    // Clamp to 0-100%
+    if (percentage < 0) percentage = 0;
+    if (percentage > 100) percentage = 100;
+    
+    return percentage;
+  #else
+    return -1; // Battery reading disabled
+  #endif
+}
+
 void showCenteredText(const String& line1, const String& line2 = "", const String& line3 = "") {
   display.clearDisplay();
   display.setTextColor(SSD1306_WHITE);
@@ -158,6 +187,9 @@ void sendToWeb(float temperature, float humidity) {
   http.setTimeout(15000);
   http.setReuse(false);
 
+  // Read battery percentage
+  float batteryPercent = readBatteryPercentage();
+
   // Create JSON payload matching backend format
   String body = "{";
   body += "\"room_id\":" + String(ROOM_ID) + ",";
@@ -166,6 +198,9 @@ void sendToWeb(float temperature, float humidity) {
   body += "\"motion\":0,";  // No motion sensor
   body += "\"rain\":0,";    // No rain sensor
   body += "\"gas\":0,";     // No gas sensor
+  if (batteryPercent >= 0) {
+    body += "\"battery\":" + String(batteryPercent, 1) + ",";
+  }
   body += "\"ts\":" + String((unsigned long)millis());
   body += "}";
 

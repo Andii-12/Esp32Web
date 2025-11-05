@@ -286,6 +286,7 @@ router.post('/public/room', async (req, res) => {
       motion, 
       rain, 
       gas, 
+      battery,
       ts 
     } = req.body;
 
@@ -307,6 +308,7 @@ router.post('/public/room', async (req, res) => {
       motion: motion === 1,
       gas: gas === 1,
       waterLevel: rain === 1 ? 100 : 0,
+      battery: battery !== undefined ? parseFloat(battery) : undefined,
       timestamp: now.toISOString(), // Use server time, convert to ISO string
       receivedAt: now.toISOString(), // Server time when data was received
       _id: nodeId // For compatibility with frontend
