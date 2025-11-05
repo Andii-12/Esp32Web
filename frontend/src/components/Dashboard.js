@@ -211,10 +211,10 @@ const Dashboard = () => {
                       </span>
                     </div>
                     <div className="sensor-row">
-                      <span className="sensor-label">🌊 Water Level:</span>
-                      <span className="sensor-value">
-                        {room1Data.waterLevel !== undefined && typeof room1Data.waterLevel === 'number' 
-                          ? room1Data.waterLevel.toFixed(1) + '%' 
+                      <span className="sensor-label">💧 Water Sensor:</span>
+                      <span className={`sensor-value ${room1Data.waterLevel > 0 ? 'motion-detected' : ''}`}>
+                        {room1Data.waterLevel !== undefined 
+                          ? (room1Data.waterLevel > 0 ? 'Wet' : 'Dry')
                           : 'N/A'}
                       </span>
                     </div>
@@ -284,10 +284,10 @@ const Dashboard = () => {
                       </span>
                     </div>
                     <div className="sensor-row">
-                      <span className="sensor-label">🌊 Water Level:</span>
-                      <span className="sensor-value">
-                        {room2Data.waterLevel !== undefined && typeof room2Data.waterLevel === 'number' 
-                          ? room2Data.waterLevel.toFixed(1) + '%' 
+                      <span className="sensor-label">💧 Water Sensor:</span>
+                      <span className={`sensor-value ${room2Data.waterLevel > 0 ? 'motion-detected' : ''}`}>
+                        {room2Data.waterLevel !== undefined 
+                          ? (room2Data.waterLevel > 0 ? 'Wet' : 'Dry')
                           : 'N/A'}
                       </span>
                     </div>
@@ -336,7 +336,7 @@ const Dashboard = () => {
                     <th>Temperature</th>
                     <th>Humidity</th>
                     <th>Gas</th>
-                    <th>Water Level</th>
+                    <th>Water Sensor</th>
                     <th>Motion</th>
                     <th>Soil Moisture</th>
                     <th>Timestamp</th>
@@ -356,7 +356,11 @@ const Dashboard = () => {
                               : (typeof item.gas === 'number' ? `${item.gas.toFixed(1)}%` : '-'))
                           : '-'}
                       </td>
-                      <td>{item.waterLevel !== undefined && typeof item.waterLevel === 'number' ? `${item.waterLevel.toFixed(1)}%` : '-'}</td>
+                      <td>
+                        {item.waterLevel !== undefined 
+                          ? (item.waterLevel > 0 ? 'Wet' : 'Dry')
+                          : '-'}
+                      </td>
                       <td>{item.motion !== undefined ? (item.motion ? 'Yes' : 'No') : '-'}</td>
                       <td>{item.soilMoisture !== undefined && typeof item.soilMoisture === 'number' ? `${item.soilMoisture.toFixed(1)}%` : '-'}</td>
                       <td>{formatDate(item.timestamp)}</td>
