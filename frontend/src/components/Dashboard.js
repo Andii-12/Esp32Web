@@ -168,19 +168,37 @@ const Dashboard = () => {
                   <div className="room-data">
                     <div className="sensor-row">
                       <span className="sensor-label">🌡️ Temperature:</span>
-                      <span className="sensor-value">{room1Data.temperature !== undefined ? room1Data.temperature.toFixed(1) + '°C' : 'N/A'}</span>
+                      <span className="sensor-value">
+                        {room1Data.temperature !== undefined && typeof room1Data.temperature === 'number' 
+                          ? room1Data.temperature.toFixed(1) + '°C' 
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">💧 Humidity:</span>
-                      <span className="sensor-value">{room1Data.humidity !== undefined ? room1Data.humidity.toFixed(1) + '%' : 'N/A'}</span>
+                      <span className="sensor-value">
+                        {room1Data.humidity !== undefined && typeof room1Data.humidity === 'number' 
+                          ? room1Data.humidity.toFixed(1) + '%' 
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">💨 Gas:</span>
-                      <span className="sensor-value">{room1Data.gas !== undefined ? room1Data.gas.toFixed(1) + '%' : 'N/A'}</span>
+                      <span className="sensor-value">
+                        {room1Data.gas !== undefined 
+                          ? (typeof room1Data.gas === 'boolean' 
+                              ? (room1Data.gas ? 'Alert' : 'OK')
+                              : (typeof room1Data.gas === 'number' ? room1Data.gas.toFixed(1) + '%' : 'N/A'))
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">🌊 Water Level:</span>
-                      <span className="sensor-value">{room1Data.waterLevel !== undefined ? room1Data.waterLevel.toFixed(1) + '%' : 'N/A'}</span>
+                      <span className="sensor-value">
+                        {room1Data.waterLevel !== undefined && typeof room1Data.waterLevel === 'number' 
+                          ? room1Data.waterLevel.toFixed(1) + '%' 
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">🚶 Motion:</span>
@@ -190,7 +208,11 @@ const Dashboard = () => {
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">🌱 Soil Moisture:</span>
-                      <span className="sensor-value">{room1Data.soilMoisture !== undefined ? room1Data.soilMoisture.toFixed(1) + '%' : 'N/A'}</span>
+                      <span className="sensor-value">
+                        {room1Data.soilMoisture !== undefined && typeof room1Data.soilMoisture === 'number' 
+                          ? room1Data.soilMoisture.toFixed(1) + '%' 
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="sensor-row timestamp-row">
                       <span className="sensor-label">🕐 Last Update:</span>
@@ -219,19 +241,37 @@ const Dashboard = () => {
                   <div className="room-data">
                     <div className="sensor-row">
                       <span className="sensor-label">🌡️ Temperature:</span>
-                      <span className="sensor-value">{room2Data.temperature !== undefined ? room2Data.temperature.toFixed(1) + '°C' : 'N/A'}</span>
+                      <span className="sensor-value">
+                        {room2Data.temperature !== undefined && typeof room2Data.temperature === 'number' 
+                          ? room2Data.temperature.toFixed(1) + '°C' 
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">💧 Humidity:</span>
-                      <span className="sensor-value">{room2Data.humidity !== undefined ? room2Data.humidity.toFixed(1) + '%' : 'N/A'}</span>
+                      <span className="sensor-value">
+                        {room2Data.humidity !== undefined && typeof room2Data.humidity === 'number' 
+                          ? room2Data.humidity.toFixed(1) + '%' 
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">💨 Gas:</span>
-                      <span className="sensor-value">{room2Data.gas !== undefined ? room2Data.gas.toFixed(1) + '%' : 'N/A'}</span>
+                      <span className="sensor-value">
+                        {room2Data.gas !== undefined 
+                          ? (typeof room2Data.gas === 'boolean' 
+                              ? (room2Data.gas ? 'Alert' : 'OK')
+                              : (typeof room2Data.gas === 'number' ? room2Data.gas.toFixed(1) + '%' : 'N/A'))
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">🌊 Water Level:</span>
-                      <span className="sensor-value">{room2Data.waterLevel !== undefined ? room2Data.waterLevel.toFixed(1) + '%' : 'N/A'}</span>
+                      <span className="sensor-value">
+                        {room2Data.waterLevel !== undefined && typeof room2Data.waterLevel === 'number' 
+                          ? room2Data.waterLevel.toFixed(1) + '%' 
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">🚶 Motion:</span>
@@ -241,7 +281,11 @@ const Dashboard = () => {
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">🌱 Soil Moisture:</span>
-                      <span className="sensor-value">{room2Data.soilMoisture !== undefined ? room2Data.soilMoisture.toFixed(1) + '%' : 'N/A'}</span>
+                      <span className="sensor-value">
+                        {room2Data.soilMoisture !== undefined && typeof room2Data.soilMoisture === 'number' 
+                          ? room2Data.soilMoisture.toFixed(1) + '%' 
+                          : 'N/A'}
+                      </span>
                     </div>
                     <div className="sensor-row timestamp-row">
                       <span className="sensor-label">🕐 Last Update:</span>
@@ -285,12 +329,18 @@ const Dashboard = () => {
                     <tr key={item._id}>
                       <td>{item.nodeId || item.deviceId}</td>
                       <td>{item.adminId || '-'}</td>
-                      <td>{item.temperature !== undefined ? `${item.temperature.toFixed(1)}°C` : '-'}</td>
-                      <td>{item.humidity !== undefined ? `${item.humidity.toFixed(1)}%` : '-'}</td>
-                      <td>{item.gas !== undefined ? `${item.gas.toFixed(1)}%` : '-'}</td>
-                      <td>{item.waterLevel !== undefined ? `${item.waterLevel.toFixed(1)}%` : '-'}</td>
+                      <td>{item.temperature !== undefined && typeof item.temperature === 'number' ? `${item.temperature.toFixed(1)}°C` : '-'}</td>
+                      <td>{item.humidity !== undefined && typeof item.humidity === 'number' ? `${item.humidity.toFixed(1)}%` : '-'}</td>
+                      <td>
+                        {item.gas !== undefined 
+                          ? (typeof item.gas === 'boolean' 
+                              ? (item.gas ? 'Alert' : 'OK')
+                              : (typeof item.gas === 'number' ? `${item.gas.toFixed(1)}%` : '-'))
+                          : '-'}
+                      </td>
+                      <td>{item.waterLevel !== undefined && typeof item.waterLevel === 'number' ? `${item.waterLevel.toFixed(1)}%` : '-'}</td>
                       <td>{item.motion !== undefined ? (item.motion ? 'Yes' : 'No') : '-'}</td>
-                      <td>{item.soilMoisture !== undefined ? `${item.soilMoisture.toFixed(1)}%` : '-'}</td>
+                      <td>{item.soilMoisture !== undefined && typeof item.soilMoisture === 'number' ? `${item.soilMoisture.toFixed(1)}%` : '-'}</td>
                       <td>{formatDate(item.timestamp)}</td>
                     </tr>
                   ))}
