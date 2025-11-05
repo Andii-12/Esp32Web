@@ -16,13 +16,13 @@ const Dashboard = () => {
     fetchData();
     fetchLatestDataAllNodes();
 
-    // Auto-refresh every 500ms for real-time updates
+    // Auto-refresh every 300ms for real-time updates (no delay)
     const interval = setInterval(() => {
       fetchLatestDataAllNodes();
-    }, 500);
+    }, 300);
 
     setRefreshInterval(interval);
-    console.log('[Dashboard] Auto-refresh interval started (500ms)');
+    console.log('[Dashboard] Auto-refresh interval started (300ms - real-time)');
 
     return () => {
       if (interval) clearInterval(interval);
@@ -96,7 +96,7 @@ const Dashboard = () => {
     return date.toLocaleString();
   };
 
-  // Check if room is online (data received within last 30 seconds)
+  // Check if room is online (data received within last 5 seconds - real-time)
   const isRoomOnline = (nodeId) => {
     const roomData = latestDataAllNodes.find(n => n.nodeId === nodeId);
     if (!roomData) return false;
@@ -112,11 +112,11 @@ const Dashboard = () => {
     if (isNaN(dataTime.getTime())) return false;
     
     const diffSeconds = (now - dataTime) / 1000;
-    // Online if data received within last 30 seconds (increased for reliability)
-    return diffSeconds < 30;
+    // Online if data received within last 5 seconds (ESP32 sends every 2 seconds)
+    return diffSeconds < 5;
   };
 
-  // Check if Admin is online (any room has sent data within last 30 seconds)
+  // Check if Admin is online (any room has sent data within last 5 seconds - real-time)
   const isAdminOnline = () => {
     if (latestDataAllNodes.length === 0) return false;
     
@@ -130,8 +130,8 @@ const Dashboard = () => {
       if (isNaN(dataTime.getTime())) return false;
       
       const diffSeconds = (now - dataTime) / 1000;
-      // Admin online if any room sent data within last 30 seconds
-      return diffSeconds < 30;
+      // Admin online if any room sent data within last 5 seconds (real-time)
+      return diffSeconds < 5;
     });
     return hasRecentData;
   };
