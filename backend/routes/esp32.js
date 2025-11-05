@@ -298,6 +298,7 @@ router.post('/public/room', async (req, res) => {
     const adminId = 'ADMIN_001';        // Default admin ID
 
     // Store in memory for real-time display (no MongoDB save)
+    const now = new Date();
     realTimeDataStore.set(nodeId, {
       nodeId: nodeId,
       adminId: 'ADMIN_001',
@@ -306,8 +307,8 @@ router.post('/public/room', async (req, res) => {
       motion: motion === 1,
       gas: gas === 1,
       waterLevel: rain === 1 ? 100 : 0,
-      timestamp: ts ? new Date(ts) : new Date(),
-      receivedAt: new Date(),
+      timestamp: now.toISOString(), // Use server time, convert to ISO string
+      receivedAt: now.toISOString(), // Server time when data was received
       _id: nodeId // For compatibility with frontend
     });
     

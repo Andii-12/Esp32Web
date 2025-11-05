@@ -96,24 +96,42 @@ const Dashboard = () => {
     return date.toLocaleString();
   };
 
-  // Check if room is online (data received within last 10 seconds)
+  // Check if room is online (data received within last 30 seconds)
   const isRoomOnline = (nodeId) => {
     const roomData = latestDataAllNodes.find(n => n.nodeId === nodeId);
     if (!roomData) return false;
+    
+    // Use receivedAt (server time) if available, otherwise use timestamp
+    const timeField = roomData.receivedAt || roomData.timestamp;
+    if (!timeField) return false;
+    
     const now = new Date();
-    const dataTime = new Date(roomData.timestamp || roomData.receivedAt);
+    const dataTime = new Date(timeField);
+    
+    // Check if date is valid
+    if (isNaN(dataTime.getTime())) return false;
+    
     const diffSeconds = (now - dataTime) / 1000;
-    return diffSeconds < 10; // Online if data received within last 10 seconds
+    // Online if data received within last 30 seconds (increased for reliability)
+    return diffSeconds < 30;
   };
 
-  // Check if Admin is online (any room has sent data within last 15 seconds)
+  // Check if Admin is online (any room has sent data within last 30 seconds)
   const isAdminOnline = () => {
     if (latestDataAllNodes.length === 0) return false;
+    
     const now = new Date();
     const hasRecentData = latestDataAllNodes.some(roomData => {
-      const dataTime = new Date(roomData.timestamp || roomData.receivedAt);
+      // Use receivedAt (server time) if available, otherwise use timestamp
+      const timeField = roomData.receivedAt || roomData.timestamp;
+      if (!timeField) return false;
+      
+      const dataTime = new Date(timeField);
+      if (isNaN(dataTime.getTime())) return false;
+      
       const diffSeconds = (now - dataTime) / 1000;
-      return diffSeconds < 15; // Admin online if any room sent data within last 15 seconds
+      // Admin online if any room sent data within last 30 seconds
+      return diffSeconds < 30;
     });
     return hasRecentData;
   };
