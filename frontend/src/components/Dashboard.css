@@ -351,15 +351,159 @@
   font-weight: 700;
 }
 
+/* Mobile Responsive Styles */
 @media (max-width: 768px) {
   .dashboard-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
+    padding: 15px 20px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 20px;
+    margin-bottom: 3px;
+  }
+
+  .dashboard-header p {
+    font-size: 13px;
+  }
+
+  .logout-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+  }
+
+  .dashboard-content {
+    padding: 15px 10px;
+  }
+
+  .admin-section {
+    padding: 20px 15px;
+    margin-bottom: 15px;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .admin-header h2 {
+    font-size: 20px;
+  }
+
+  .admin-info p {
+    font-size: 14px;
+  }
+
+  .rooms-section {
+    padding: 20px 15px;
+    margin-bottom: 15px;
+  }
+
+  .rooms-section h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .rooms-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .room-card {
+    padding: 20px 15px;
+  }
+
+  .room-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 15px;
+  }
+
+  .room-header h3 {
+    font-size: 20px;
+  }
+
+  .status-badge {
+    padding: 5px 12px;
+    font-size: 12px;
+  }
+
+  .sensor-row {
+    padding: 10px 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .sensor-label {
+    font-size: 13px;
+  }
+
+  .sensor-value {
+    font-size: 15px;
+    width: 100%;
+  }
+
+  .sensor-value-small {
+    font-size: 11px;
+  }
+
+  .data-history {
+    padding: 20px 15px;
+  }
+
+  .data-history h2 {
+    font-size: 18px;
+    margin-bottom: 15px;
+  }
+
+  .data-table {
+    font-size: 12px;
+  }
+
+  .data-table th {
+    padding: 8px 6px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .data-table td {
+    padding: 8px 6px;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .loading,
+  .no-data {
+    padding: 30px 20px;
+    font-size: 14px;
+  }
+
+  .error-message {
+    padding: 10px;
+    font-size: 13px;
+    margin-bottom: 15px;
   }
 
   .filter-section {
     flex-direction: column;
+    padding: 15px;
+  }
+
+  .filter-button,
+  .refresh-button {
+    width: 100%;
+    padding: 12px;
   }
 
   .data-grid {
@@ -369,9 +513,54 @@
   .nodes-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .table-container {
-    overflow-x: scroll;
+/* Small Mobile Devices */
+@media (max-width: 480px) {
+  .dashboard-header {
+    padding: 12px 15px;
+  }
+
+  .dashboard-header h1 {
+    font-size: 18px;
+  }
+
+  .dashboard-content {
+    padding: 10px 8px;
+  }
+
+  .admin-section,
+  .rooms-section,
+  .data-history {
+    padding: 15px 12px;
+    border-radius: 8px;
+  }
+
+  .room-card {
+    padding: 15px 12px;
+  }
+
+  .room-header h3 {
+    font-size: 18px;
+  }
+
+  .sensor-label {
+    font-size: 12px;
+  }
+
+  .sensor-value {
+    font-size: 14px;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 6px 4px;
+    font-size: 10px;
+  }
+
+  .status-badge {
+    padding: 4px 10px;
+    font-size: 11px;
   }
 }
 
