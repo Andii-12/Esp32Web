@@ -24,9 +24,7 @@ const char* API_KEY    = "esp32_prod_key";  // API key if enabled on server (lea
 
 // Timing
 unsigned long lastRead = 0;
-const unsigned long readIntervalMs = 5000;  // Read sensor every 5 seconds
-unsigned long lastSend = 0;
-const unsigned long sendIntervalMs = 10000;  // Send to server every 10 seconds
+const unsigned long readIntervalMs = 2000;  // Read sensor every 2 seconds (DHT22 minimum) and send immediately
 
 // ====== OBJECTS ======
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
@@ -314,14 +312,11 @@ void loop() {
     Serial.print("%  WiFi=");
     Serial.println(wifiConnected ? "ON" : "OFF");
 
-    // Send to web server
-    if (now - lastSend >= sendIntervalMs) {
-      lastSend = now;
-      if (wifiConnected) {
-        sendToWeb(t, h);
-      } else {
-        Serial.println("WiFi not connected, skipping web send");
-      }
+    // Send to web server immediately after reading
+    if (wifiConnected) {
+      sendToWeb(t, h);
+    } else {
+      Serial.println("WiFi not connected, skipping web send");
     }
   }
   
