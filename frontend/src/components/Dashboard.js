@@ -224,14 +224,6 @@ const Dashboard = () => {
                         {room1Data.motion ? 'Detected' : 'None'}
                       </span>
                     </div>
-                    <div className="sensor-row">
-                      <span className="sensor-label">🌱 Soil Moisture:</span>
-                      <span className="sensor-value">
-                        {room1Data.soilMoisture !== undefined && typeof room1Data.soilMoisture === 'number' 
-                          ? room1Data.soilMoisture.toFixed(1) + '%' 
-                          : 'N/A'}
-                      </span>
-                    </div>
                     <div className="sensor-row timestamp-row">
                       <span className="sensor-label">🕐 Last Update:</span>
                       <span className="sensor-value-small">{formatDate(room1Data.timestamp)}</span>
@@ -297,14 +289,6 @@ const Dashboard = () => {
                         {room2Data.motion ? 'Detected' : 'None'}
                       </span>
                     </div>
-                    <div className="sensor-row">
-                      <span className="sensor-label">🌱 Soil Moisture:</span>
-                      <span className="sensor-value">
-                        {room2Data.soilMoisture !== undefined && typeof room2Data.soilMoisture === 'number' 
-                          ? room2Data.soilMoisture.toFixed(1) + '%' 
-                          : 'N/A'}
-                      </span>
-                    </div>
                     <div className="sensor-row timestamp-row">
                       <span className="sensor-label">🕐 Last Update:</span>
                       <span className="sensor-value-small">{formatDate(room2Data.timestamp)}</span>
@@ -338,7 +322,6 @@ const Dashboard = () => {
                     <th>Gas</th>
                     <th>Water Sensor</th>
                     <th>Motion</th>
-                    <th>Soil Moisture</th>
                     <th>Timestamp</th>
                   </tr>
                 </thead>
@@ -362,7 +345,6 @@ const Dashboard = () => {
                           : '-'}
                       </td>
                       <td>{item.motion !== undefined ? (item.motion ? 'Yes' : 'No') : '-'}</td>
-                      <td>{item.soilMoisture !== undefined && typeof item.soilMoisture === 'number' ? `${item.soilMoisture.toFixed(1)}%` : '-'}</td>
                       <td>{formatDate(item.timestamp)}</td>
                     </tr>
                   ))}
