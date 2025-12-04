@@ -17,6 +17,8 @@ const Dashboard = () => {
   const [newEmailName, setNewEmailName] = useState('');
   const [emailError, setEmailError] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
+  const [testEmailLoading, setTestEmailLoading] = useState(false);
+  const [testEmailResult, setTestEmailResult] = useState(null);
 
   useEffect(() => {
     console.log('[Dashboard] Component mounted, starting data fetch...');
@@ -201,6 +203,33 @@ const Dashboard = () => {
     }
   };
 
+  // Test email configuration
+  const handleTestEmail = async () => {
+    setTestEmailLoading(true);
+    setTestEmailResult(null);
+    setEmailError('');
+    
+    try {
+      const response = await axios.post('/api/email-recipients/test', {
+        email: newEmail || undefined // Use new email if provided, otherwise use default
+      });
+      setTestEmailResult({
+        success: response.data.success,
+        message: response.data.message,
+        status: response.data.status,
+        recipientCount: response.data.recipientCount
+      });
+    } catch (err) {
+      setTestEmailResult({
+        success: false,
+        message: err.response?.data?.message || 'Failed to test email configuration',
+        error: err.response?.data?.error
+      });
+    } finally {
+      setTestEmailLoading(false);
+    }
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -244,6 +273,50 @@ const Dashboard = () => {
           <div className="admin-info">
             <p>Manage email addresses that will receive alert notifications</p>
             {emailError && <div className="error-message" style={{ marginTop: '10px' }}>{emailError}</div>}
+            
+            {/* Test Email Button */}
+            <div style={{ marginTop: '15px', marginBottom: '15px' }}>
+              <button
+                onClick={handleTestEmail}
+                disabled={testEmailLoading}
+                style={{
+                  padding: '10px 20px',
+                  background: '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  marginRight: '10px'
+                }}
+              >
+                {testEmailLoading ? 'Testing...' : '🧪 Test Email Configuration'}
+              </button>
+              {testEmailResult && (
+                <div style={{
+                  marginTop: '10px',
+                  padding: '12px',
+                  borderRadius: '8px',
+                  background: testEmailResult.success ? '#d4edda' : '#f8d7da',
+                  color: testEmailResult.success ? '#155724' : '#721c24',
+                  border: `1px solid ${testEmailResult.success ? '#c3e6cb' : '#f5c6cb'}`
+                }}>
+                  <strong>{testEmailResult.success ? '✅' : '❌'} {testEmailResult.message}</strong>
+                  {testEmailResult.status && (
+                    <div style={{ marginTop: '8px', fontSize: '12px' }}>
+                      <p><strong>Email Service Status:</strong></p>
+                      <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
+                        <li>Host: {testEmailResult.status.host}</li>
+                        <li>Port: {testEmailResult.status.port}</li>
+                        <li>User: {testEmailResult.status.user}</li>
+                        <li>Recipients in database: {testEmailResult.recipientCount || 0}</li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
             
             {/* Add Email Form */}
             <form onSubmit={handleAddEmail} style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -391,12 +464,12 @@ const Dashboard = () => {
                       <span className="sensor-value">
                         {room1Data.gasSensorConnected === false ? (
                           <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
-                        ) : room1Data.gas !== undefined 
+                        ) : room1Data.gas !== undefined && room1Data.gas !== null
                           ? (typeof room1Data.gas === 'boolean' 
-                              ? (room1Data.gas ? 'Alert' : 'OK')
+                              ? (room1Data.gas ? <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Alert</span> : 'OK')
                               : (typeof room1Data.gas === 'number' ? room1Data.gas.toFixed(1) + '%' : 'N/A'))
                           : 'N/A'}
-                        {room1Data.gasRaw !== undefined && room1Data.gasSensorConnected && (
+                        {room1Data.gasRaw !== undefined && room1Data.gasRaw !== null && room1Data.gasSensorConnected !== false && (
                           <span style={{ fontSize: '11px', color: '#888', marginLeft: '8px' }}>
                             (Raw: {room1Data.gasRaw})
                           </span>
@@ -408,8 +481,8 @@ const Dashboard = () => {
                       <span className={`sensor-value ${room1Data.waterLevel > 0 ? 'motion-detected' : ''}`}>
                         {room1Data.rainSensorConnected === false ? (
                           <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
-                        ) : room1Data.waterLevel !== undefined 
-                          ? (room1Data.waterLevel > 0 ? 'Wet' : 'Dry')
+                        ) : room1Data.waterLevel !== undefined && room1Data.waterLevel !== null
+                          ? (room1Data.waterLevel > 0 ? <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Wet</span> : 'Dry')
                           : 'N/A'}
                       </span>
                     </div>
@@ -475,12 +548,12 @@ const Dashboard = () => {
                       <span className="sensor-value">
                         {room2Data.gasSensorConnected === false ? (
                           <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
-                        ) : room2Data.gas !== undefined 
+                        ) : room2Data.gas !== undefined && room2Data.gas !== null
                           ? (typeof room2Data.gas === 'boolean' 
-                              ? (room2Data.gas ? 'Alert' : 'OK')
+                              ? (room2Data.gas ? <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Alert</span> : 'OK')
                               : (typeof room2Data.gas === 'number' ? room2Data.gas.toFixed(1) + '%' : 'N/A'))
                           : 'N/A'}
-                        {room2Data.gasRaw !== undefined && room2Data.gasSensorConnected && (
+                        {room2Data.gasRaw !== undefined && room2Data.gasRaw !== null && room2Data.gasSensorConnected !== false && (
                           <span style={{ fontSize: '11px', color: '#888', marginLeft: '8px' }}>
                             (Raw: {room2Data.gasRaw})
                           </span>
@@ -492,8 +565,8 @@ const Dashboard = () => {
                       <span className={`sensor-value ${room2Data.waterLevel > 0 ? 'motion-detected' : ''}`}>
                         {room2Data.rainSensorConnected === false ? (
                           <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
-                        ) : room2Data.waterLevel !== undefined 
-                          ? (room2Data.waterLevel > 0 ? 'Wet' : 'Dry')
+                        ) : room2Data.waterLevel !== undefined && room2Data.waterLevel !== null
+                          ? (room2Data.waterLevel > 0 ? <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Wet</span> : 'Dry')
                           : 'N/A'}
                       </span>
                     </div>
@@ -550,12 +623,12 @@ const Dashboard = () => {
                       <td>
                         {item.gasSensorConnected === false ? (
                           <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
-                        ) : item.gas !== undefined 
+                        ) : item.gas !== undefined && item.gas !== null
                           ? (typeof item.gas === 'boolean' 
-                              ? (item.gas ? 'Alert' : 'OK')
+                              ? (item.gas ? <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Alert</span> : 'OK')
                               : (typeof item.gas === 'number' ? `${item.gas.toFixed(1)}%` : '-'))
                           : '-'}
-                        {item.gasRaw !== undefined && item.gasSensorConnected && (
+                        {item.gasRaw !== undefined && item.gasRaw !== null && item.gasSensorConnected !== false && (
                           <span style={{ fontSize: '11px', color: '#888', marginLeft: '5px' }}>
                             (Raw: {item.gasRaw})
                           </span>
@@ -564,8 +637,8 @@ const Dashboard = () => {
                       <td>
                         {item.rainSensorConnected === false ? (
                           <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
-                        ) : item.waterLevel !== undefined 
-                          ? (item.waterLevel > 0 ? 'Wet' : 'Dry')
+                        ) : item.waterLevel !== undefined && item.waterLevel !== null
+                          ? (item.waterLevel > 0 ? <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Wet</span> : 'Dry')
                           : '-'}
                       </td>
                       <td>{item.motion !== undefined ? (item.motion ? 'Yes' : 'No') : '-'}</td>

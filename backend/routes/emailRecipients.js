@@ -1,6 +1,7 @@
 const express = require('express');
 const EmailRecipient = require('../models/EmailRecipient');
 const auth = require('../middleware/auth');
+const { testEmail, initializeEmailService } = require('../services/emailService');
 const router = express.Router();
 
 // Get all email recipients (protected)
@@ -127,6 +128,64 @@ router.put('/:id', auth, async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Test email configuration (protected)
+router.post('/test', auth, async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    // Check email service status
+    const emailStatus = {
+      configured: !!(process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS),
+      host: process.env.EMAIL_HOST || 'Not set',
+      port: process.env.EMAIL_PORT || '587',
+      user: process.env.EMAIL_USER || 'Not set',
+      secure: process.env.EMAIL_SECURE === 'true'
+    };
+
+    if (!emailStatus.configured) {
+      return res.status(400).json({
+        success: false,
+        message: 'Email service not configured',
+        status: emailStatus
+      });
+    }
+
+    // Get recipients count
+    const recipientCount = await EmailRecipient.countDocuments({ active: true });
+
+    // Test email service initialization
+    const initialized = await initializeEmailService();
+    if (!initialized) {
+      return res.status(500).json({
+        success: false,
+        message: 'Email service failed to initialize',
+        status: emailStatus,
+        recipientCount
+      });
+    }
+
+    // Send test email
+    const testRecipient = email || process.env.EMAIL_USER;
+    const result = await testEmail(testRecipient);
+
+    res.json({
+      success: result.success,
+      message: result.success 
+        ? `Test email sent successfully to ${testRecipient}` 
+        : `Failed to send test email: ${result.error}`,
+      status: emailStatus,
+      recipientCount,
+      testResult: result
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error', 
+      error: error.message 
+    });
   }
 });
 

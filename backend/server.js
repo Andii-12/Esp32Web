@@ -8,8 +8,10 @@ dotenv.config();
 
 const app = express();
 
-// Initialize email service
-initializeEmailService();
+// Initialize email service (async)
+initializeEmailService().catch(err => {
+  console.error('Failed to initialize email service:', err);
+});
 
 // Middleware
 // Configure CORS for production deployments (Railway + Vercel)

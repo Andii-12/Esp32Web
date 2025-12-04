@@ -364,8 +364,9 @@ router.post('/public/room', async (req, res) => {
       }
     }
 
-    // Check rain sensor alert
-    if (rain === 1) {
+    // Check rain sensor alert (handle both string and number)
+    const rainValueForAlert = rain !== undefined && rain !== null ? parseInt(rain) : 0;
+    if (rainValueForAlert === 1) {
       if (!alertState.rainSent) {
         console.log(`🌧️ Rain detected in Room ${room_id}`);
         await sendRainAlert(room_id);
@@ -376,8 +377,9 @@ router.post('/public/room', async (req, res) => {
       alertState.rainSent = false;
     }
 
-    // Check gas sensor alert
-    if (gas === 1) {
+    // Check gas sensor alert (handle both string and number)
+    const gasValueForAlert = gas !== undefined && gas !== null ? parseInt(gas) : 0;
+    if (gasValueForAlert === 1) {
       if (!alertState.gasSent) {
         console.log(`⚠️ Gas detected in Room ${room_id}`);
         await sendGasAlert(room_id);
@@ -390,18 +392,29 @@ router.post('/public/room', async (req, res) => {
 
     // Store in memory for real-time display (no MongoDB save)
     const now = new Date();
+    
+    // Convert sensor values to proper types (handle string "0"/"1" or number 0/1)
+    const rainValue = rain !== undefined && rain !== null ? (parseInt(rain) === 1) : undefined;
+    const gasValue = gas !== undefined && gas !== null ? (parseInt(gas) === 1) : undefined;
+    const rainConnected = rain_sensor_connected !== undefined && rain_sensor_connected !== null 
+      ? (parseInt(rain_sensor_connected) === 1) 
+      : true; // Default to true if not specified (assume connected)
+    const gasConnected = gas_sensor_connected !== undefined && gas_sensor_connected !== null 
+      ? (parseInt(gas_sensor_connected) === 1) 
+      : true; // Default to true if not specified (assume connected)
+    
     realTimeDataStore.set(nodeId, {
       nodeId: nodeId,
       adminId: 'ADMIN_001',
-      temperature,
-      humidity,
-      motion: motion === 1,
-      gas: gas === 1,
-      gasRaw: gas_raw !== undefined ? parseInt(gas_raw) : undefined,
-      waterLevel: rain === 1 ? 100 : 0,
-      rainSensorConnected: rain_sensor_connected === 1,
-      gasSensorConnected: gas_sensor_connected === 1,
-      battery: battery !== undefined ? parseFloat(battery) : undefined,
+      temperature: temperature !== undefined ? parseFloat(temperature) : undefined,
+      humidity: humidity !== undefined ? parseFloat(humidity) : undefined,
+      motion: motion !== undefined && motion !== null ? (parseInt(motion) === 1) : false,
+      gas: gasValue,
+      gasRaw: gas_raw !== undefined && gas_raw !== null ? parseInt(gas_raw) : undefined,
+      waterLevel: rainValue !== undefined ? (rainValue ? 100 : 0) : undefined,
+      rainSensorConnected: rainConnected,
+      gasSensorConnected: gasConnected,
+      battery: battery !== undefined && battery !== null ? parseFloat(battery) : undefined,
       timestamp: now.toISOString(), // Use server time, convert to ISO string
       receivedAt: now.toISOString(), // Server time when data was received
       _id: nodeId // For compatibility with frontend
@@ -409,11 +422,13 @@ router.post('/public/room', async (req, res) => {
     
     console.log('✅ Data stored in memory (real-time)');
     console.log('Node ID:', nodeId);
-    console.log('Sensor values - Rain:', rain, '(waterLevel:', rain === 1 ? 100 : 0, '), Gas:', gas);
-    console.log('Sensor status - Rain connected:', rain_sensor_connected === 1, ', Gas connected:', gas_sensor_connected === 1);
+    console.log('Raw sensor values received - Rain:', rain, '(type:', typeof rain, '), Gas:', gas, '(type:', typeof gas, ')');
+    console.log('Processed sensor values - Rain:', rainValue, '(waterLevel:', rainValue !== undefined ? (rainValue ? 100 : 0) : 'undefined', '), Gas:', gasValue);
+    console.log('Sensor connection status - Rain connected:', rainConnected, ', Gas connected:', gasConnected);
     if (gas_raw !== undefined) {
-      console.log('Gas raw reading:', gas_raw);
+      console.log('Gas raw reading:', gas_raw, '(type:', typeof gas_raw, ')');
     }
+    console.log('Stored data:', JSON.stringify(realTimeDataStore.get(nodeId), null, 2));
     console.log('=========================\n');
 
     res.status(201).json({

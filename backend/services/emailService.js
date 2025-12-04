@@ -5,10 +5,15 @@ const EmailRecipient = require('../models/EmailRecipient');
 let transporter = null;
 
 // Initialize email transporter
-const initializeEmailService = () => {
+const initializeEmailService = async () => {
   // Only initialize if email is configured
   if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.log('⚠️ Email service not configured. Email notifications will be disabled.');
+    console.log('   Missing:', {
+      EMAIL_HOST: !process.env.EMAIL_HOST,
+      EMAIL_USER: !process.env.EMAIL_USER,
+      EMAIL_PASS: !process.env.EMAIL_PASS
+    });
     return false;
   }
 
@@ -20,13 +25,24 @@ const initializeEmailService = () => {
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+      },
+      tls: {
+        rejectUnauthorized: false // Allow self-signed certificates
       }
     });
 
-    console.log('✅ Email service initialized');
+    // Verify connection
+    await transporter.verify();
+    console.log('✅ Email service initialized and verified');
+    console.log('   Host:', process.env.EMAIL_HOST);
+    console.log('   Port:', process.env.EMAIL_PORT || '587');
+    console.log('   User:', process.env.EMAIL_USER);
+    console.log('   Secure:', process.env.EMAIL_SECURE === 'true');
     return true;
   } catch (error) {
-    console.error('❌ Error initializing email service:', error);
+    console.error('❌ Error initializing email service:', error.message);
+    console.error('   Full error:', error);
+    transporter = null;
     return false;
   }
 };
@@ -46,7 +62,11 @@ const getEmailRecipients = async () => {
 const sendEmailNotification = async (subject, message, htmlMessage = null) => {
   if (!transporter) {
     console.log('⚠️ Email service not available, skipping email notification');
-    return { success: false, error: 'Email service not configured' };
+    console.log('   Attempting to reinitialize...');
+    const reinit = await initializeEmailService();
+    if (!reinit) {
+      return { success: false, error: 'Email service not configured' };
+    }
   }
 
   // Get recipients from database
@@ -54,7 +74,8 @@ const sendEmailNotification = async (subject, message, htmlMessage = null) => {
   
   if (recipients.length === 0) {
     console.log('⚠️ No email recipients configured in database');
-    return { success: false, error: 'No email recipients configured' };
+    console.log('   Please add email recipients through the web dashboard');
+    return { success: false, error: 'No email recipients configured. Add recipients through the dashboard.' };
   }
 
   try {
@@ -66,13 +87,23 @@ const sendEmailNotification = async (subject, message, htmlMessage = null) => {
       html: htmlMessage || message.replace(/\n/g, '<br>')
     };
 
+    console.log(`📧 Attempting to send email to ${recipients.length} recipient(s)...`);
+    console.log(`   Subject: ${subject}`);
+    console.log(`   Recipients: ${recipients.join(', ')}`);
+    
     const info = await transporter.sendMail(mailOptions);
     console.log(`✅ Email sent successfully to ${recipients.length} recipient(s):`, info.messageId);
-    console.log(`   Recipients: ${recipients.join(', ')}`);
-    return { success: true, messageId: info.messageId, recipients: recipients };
+    console.log(`   Response: ${info.response}`);
+    return { success: true, messageId: info.messageId, recipients: recipients, response: info.response };
   } catch (error) {
-    console.error('❌ Error sending email:', error);
-    return { success: false, error: error.message };
+    console.error('❌ Error sending email:', error.message);
+    console.error('   Full error:', error);
+    // Try to reinitialize on error
+    if (error.code === 'EAUTH' || error.code === 'ECONNECTION') {
+      console.log('   Authentication or connection error. Attempting to reinitialize...');
+      await initializeEmailService();
+    }
+    return { success: false, error: error.message, code: error.code };
   }
 };
 
@@ -219,12 +250,63 @@ Please check the sensor and take appropriate action.
   return await sendEmailNotification(subject, message, htmlMessage);
 };
 
+// Test email function (for testing email configuration)
+const testEmail = async (testRecipient) => {
+  if (!transporter) {
+    const initialized = await initializeEmailService();
+    if (!initialized) {
+      return { success: false, error: 'Email service not configured' };
+    }
+  }
+
+  const subject = '🧪 ESP32 Email Service Test';
+  const message = `
+ESP32 Alert System - Email Test
+
+This is a test email to verify your email configuration is working correctly.
+
+Time: ${new Date().toLocaleString()}
+
+If you received this email, your email service is configured correctly!
+  `.trim();
+
+  const htmlMessage = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #667eea;">🧪 ESP32 Alert System - Email Test</h2>
+      <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0;">
+        <p>This is a test email to verify your email configuration is working correctly.</p>
+        <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+        <p style="color: #155724; font-weight: bold;">✅ If you received this email, your email service is configured correctly!</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    const mailOptions = {
+      from: `"ESP32 Alert System" <${process.env.EMAIL_USER}>`,
+      to: testRecipient || process.env.EMAIL_USER,
+      subject: subject,
+      text: message,
+      html: htmlMessage
+    };
+
+    console.log(`📧 Sending test email to: ${testRecipient || process.env.EMAIL_USER}`);
+    const info = await transporter.sendMail(mailOptions);
+    console.log(`✅ Test email sent successfully:`, info.messageId);
+    return { success: true, messageId: info.messageId, recipient: testRecipient || process.env.EMAIL_USER };
+  } catch (error) {
+    console.error('❌ Error sending test email:', error.message);
+    return { success: false, error: error.message, code: error.code };
+  }
+};
+
 module.exports = {
   initializeEmailService,
   sendEmailNotification,
   sendTemperatureAlert,
   sendRainAlert,
   sendGasAlert,
-  sendHumidityAlert
+  sendHumidityAlert,
+  testEmail
 };
 
