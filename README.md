@@ -165,6 +165,7 @@ The frontend will run on `http://localhost:3000`
 ### Email Alerts
 - Automatic email notifications for critical conditions:
   - **Temperature alerts**: Above 40°C or below -10°C
+  - **Humidity alerts**: Above 30%
   - **Rain sensor alerts**: Water detected
   - **Gas sensor alerts**: MQ2 gas detection
 - **Web-based recipient management**: Add/remove email recipients through the dashboard

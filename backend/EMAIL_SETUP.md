@@ -7,6 +7,7 @@ This document explains how to configure email notifications for ESP32 alerts.
 The system sends email notifications when:
 - **Temperature > 40°C** (High temperature alert)
 - **Temperature < -10°C** (Low temperature alert)
+- **Humidity > 30%** (High humidity alert)
 - **Rain sensor detects water** (Rain alert)
 - **MQ2 gas sensor detects gas** (Gas alert)
 

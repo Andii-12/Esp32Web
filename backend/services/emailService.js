@@ -181,11 +181,50 @@ WARNING: The MQ2 gas sensor has detected gas. Please check the area immediately 
   return await sendEmailNotification(subject, message, htmlMessage);
 };
 
+// Send humidity alert email
+const sendHumidityAlert = async (roomId, humidity) => {
+  const threshold = '30%';
+  const subject = `💧 ESP32 Alert: High Humidity in Room ${roomId}`;
+  
+  const message = `
+ESP32 Alert System Notification
+
+💧 HUMIDITY ALERT
+
+Room: ${roomId}
+Current Humidity: ${humidity}%
+Threshold: ${threshold}
+Status: HIGH HUMIDITY DETECTED
+
+Time: ${new Date().toLocaleString()}
+
+Please check the sensor and take appropriate action.
+  `.trim();
+
+  const htmlMessage = `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+      <h2 style="color: #0d6efd;">💧 ESP32 Alert System Notification</h2>
+      <div style="background-color: #cfe2ff; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0;">
+        <h3 style="color: #084298; margin-top: 0;">💧 HUMIDITY ALERT</h3>
+        <p><strong>Room:</strong> ${roomId}</p>
+        <p><strong>Current Humidity:</strong> <span style="color: #0d6efd; font-size: 18px; font-weight: bold;">${humidity}%</span></p>
+        <p><strong>Threshold:</strong> ${threshold}</p>
+        <p><strong>Status:</strong> <span style="color: #084298; font-weight: bold;">HIGH HUMIDITY DETECTED</span></p>
+        <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+      </div>
+      <p style="color: #666;">Please check the sensor and take appropriate action.</p>
+    </div>
+  `;
+
+  return await sendEmailNotification(subject, message, htmlMessage);
+};
+
 module.exports = {
   initializeEmailService,
   sendEmailNotification,
   sendTemperatureAlert,
   sendRainAlert,
-  sendGasAlert
+  sendGasAlert,
+  sendHumidityAlert
 };
 

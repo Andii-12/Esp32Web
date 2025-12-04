@@ -1,7 +1,7 @@
 const express = require('express');
 const Esp32Data = require('../models/Esp32Data');
 const auth = require('../middleware/auth');
-const { sendTemperatureAlert, sendRainAlert, sendGasAlert } = require('../services/emailService');
+const { sendTemperatureAlert, sendRainAlert, sendGasAlert, sendHumidityAlert } = require('../services/emailService');
 const router = express.Router();
 
 // In-memory storage for real-time data (no MongoDB persistence)
@@ -311,6 +311,7 @@ router.post('/public/room', async (req, res) => {
       alertStates.set(nodeId, {
         highTempSent: false,
         lowTempSent: false,
+        highHumiditySent: false,
         rainSent: false,
         gasSent: false
       });
@@ -343,6 +344,23 @@ router.post('/public/room', async (req, res) => {
       } else {
         // Reset alert state when temperature returns to normal
         alertState.lowTempSent = false;
+      }
+    }
+
+    // Check humidity alerts
+    if (humidity !== undefined && humidity !== null) {
+      const hum = parseFloat(humidity);
+      
+      // High humidity alert (> 30%)
+      if (hum > 30) {
+        if (!alertState.highHumiditySent) {
+          console.log(`💧 High humidity alert: ${hum}% in Room ${room_id}`);
+          await sendHumidityAlert(room_id, hum);
+          alertState.highHumiditySent = true;
+        }
+      } else {
+        // Reset alert state when humidity returns to normal
+        alertState.highHumiditySent = false;
       }
     }
 
