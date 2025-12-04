@@ -70,7 +70,7 @@ EMAIL_PORT=587
 EMAIL_SECURE=false
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
-EMAIL_RECIPIENT=recipient@email.com
+# Note: Email recipients are managed through the web dashboard, not via .env
 ```
 
 Backend (production example for Railway):
@@ -87,7 +87,7 @@ EMAIL_PORT=587
 EMAIL_SECURE=false
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
-EMAIL_RECIPIENT=alerts@yourdomain.com
+# Note: Email recipients are managed through the web dashboard
 ```
 
 Frontend (Vercel) – add env var:
@@ -167,6 +167,8 @@ The frontend will run on `http://localhost:3000`
   - **Temperature alerts**: Above 40°C or below -10°C
   - **Rain sensor alerts**: Water detected
   - **Gas sensor alerts**: MQ2 gas detection
+- **Web-based recipient management**: Add/remove email recipients through the dashboard
+- **Multiple recipients**: Send alerts to multiple email addresses simultaneously
 - Duplicate prevention (one email per condition)
 - HTML email templates with detailed information
 - See [EMAIL_SETUP.md](backend/EMAIL_SETUP.md) for configuration

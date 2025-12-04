@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const EmailRecipient = require('../models/EmailRecipient');
 
 // Create reusable transporter
 let transporter = null;
@@ -30,32 +31,45 @@ const initializeEmailService = () => {
   }
 };
 
-// Send email notification
+// Get all active email recipients from database
+const getEmailRecipients = async () => {
+  try {
+    const recipients = await EmailRecipient.find({ active: true }).select('email name');
+    return recipients.map(r => r.email);
+  } catch (error) {
+    console.error('❌ Error fetching email recipients:', error);
+    return [];
+  }
+};
+
+// Send email notification to all recipients
 const sendEmailNotification = async (subject, message, htmlMessage = null) => {
   if (!transporter) {
     console.log('⚠️ Email service not available, skipping email notification');
     return { success: false, error: 'Email service not configured' };
   }
 
-  const recipientEmail = process.env.EMAIL_RECIPIENT || process.env.EMAIL_USER;
+  // Get recipients from database
+  const recipients = await getEmailRecipients();
   
-  if (!recipientEmail) {
-    console.log('⚠️ No recipient email configured');
-    return { success: false, error: 'No recipient email configured' };
+  if (recipients.length === 0) {
+    console.log('⚠️ No email recipients configured in database');
+    return { success: false, error: 'No email recipients configured' };
   }
 
   try {
     const mailOptions = {
       from: `"ESP32 Alert System" <${process.env.EMAIL_USER}>`,
-      to: recipientEmail,
+      to: recipients.join(', '), // Send to all recipients
       subject: subject,
       text: message,
       html: htmlMessage || message.replace(/\n/g, '<br>')
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully:', info.messageId);
-    return { success: true, messageId: info.messageId };
+    console.log(`✅ Email sent successfully to ${recipients.length} recipient(s):`, info.messageId);
+    console.log(`   Recipients: ${recipients.join(', ')}`);
+    return { success: true, messageId: info.messageId, recipients: recipients };
   } catch (error) {
     console.error('❌ Error sending email:', error);
     return { success: false, error: error.message };

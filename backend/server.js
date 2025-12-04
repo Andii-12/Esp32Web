@@ -52,6 +52,7 @@ app.get('/health', (req, res) => {
 // Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/esp32', require('./routes/esp32'));
+app.use('/api/email-recipients', require('./routes/emailRecipients'));
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/esp32data', {

@@ -10,11 +10,19 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshInterval, setRefreshInterval] = useState(null);
+  
+  // Email recipients state
+  const [emailRecipients, setEmailRecipients] = useState([]);
+  const [newEmail, setNewEmail] = useState('');
+  const [newEmailName, setNewEmailName] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [emailLoading, setEmailLoading] = useState(false);
 
   useEffect(() => {
     console.log('[Dashboard] Component mounted, starting data fetch...');
     fetchData();
     fetchLatestDataAllNodes();
+    fetchEmailRecipients();
 
     // Auto-refresh every 300ms for real-time updates (no delay)
     const interval = setInterval(() => {
@@ -136,6 +144,63 @@ const Dashboard = () => {
     return hasRecentData;
   };
 
+  // Fetch email recipients
+  const fetchEmailRecipients = async () => {
+    try {
+      const response = await axios.get('/api/email-recipients');
+      setEmailRecipients(response.data.data || []);
+    } catch (err) {
+      console.error('[Dashboard] Error fetching email recipients:', err);
+    }
+  };
+
+  // Add email recipient
+  const handleAddEmail = async (e) => {
+    e.preventDefault();
+    setEmailError('');
+    
+    if (!newEmail) {
+      setEmailError('Email is required');
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+
+    setEmailLoading(true);
+    try {
+      await axios.post('/api/email-recipients', {
+        email: newEmail,
+        name: newEmailName
+      });
+      setNewEmail('');
+      setNewEmailName('');
+      await fetchEmailRecipients();
+    } catch (err) {
+      setEmailError(err.response?.data?.message || 'Failed to add email recipient');
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
+  // Delete email recipient
+  const handleDeleteEmail = async (id) => {
+    if (!window.confirm('Are you sure you want to remove this email recipient?')) {
+      return;
+    }
+
+    try {
+      await axios.delete(`/api/email-recipients/${id}`);
+      await fetchEmailRecipients();
+    } catch (err) {
+      setEmailError(err.response?.data?.message || 'Failed to remove email recipient');
+    }
+  };
+
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -164,6 +229,117 @@ const Dashboard = () => {
             <p className="admin-id">Admin ID: ADMIN_001</p>
             {!isAdminOnline() && latestDataAllNodes.length === 0 && (
               <p style={{ color: '#dc3545', marginTop: '10px' }}>⚠️ No data received from ESP32</p>
+            )}
+          </div>
+        </div>
+
+        {/* Email Recipients Section */}
+        <div className="admin-section">
+          <div className="admin-header">
+            <h2>📧 Email Alert Recipients</h2>
+            <span className="status-badge online">
+              {emailRecipients.length} {emailRecipients.length === 1 ? 'Recipient' : 'Recipients'}
+            </span>
+          </div>
+          <div className="admin-info">
+            <p>Manage email addresses that will receive alert notifications</p>
+            {emailError && <div className="error-message" style={{ marginTop: '10px' }}>{emailError}</div>}
+            
+            {/* Add Email Form */}
+            <form onSubmit={handleAddEmail} style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="Email address"
+                required
+                style={{
+                  flex: '1',
+                  minWidth: '200px',
+                  padding: '10px',
+                  border: '2px solid #e0e0e0',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+              />
+              <input
+                type="text"
+                value={newEmailName}
+                onChange={(e) => setNewEmailName(e.target.value)}
+                placeholder="Name (optional)"
+                style={{
+                  flex: '1',
+                  minWidth: '150px',
+                  padding: '10px',
+                  border: '2px solid #e0e0e0',
+                  borderRadius: '8px',
+                  fontSize: '14px'
+                }}
+              />
+              <button
+                type="submit"
+                disabled={emailLoading}
+                style={{
+                  padding: '10px 20px',
+                  background: '#667eea',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '500'
+                }}
+              >
+                {emailLoading ? 'Adding...' : 'Add Recipient'}
+              </button>
+            </form>
+
+            {/* Email Recipients List */}
+            {emailRecipients.length > 0 ? (
+              <div style={{ marginTop: '20px' }}>
+                <h3 style={{ fontSize: '16px', marginBottom: '10px', color: '#333' }}>Current Recipients:</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {emailRecipients.map((recipient) => (
+                    <div
+                      key={recipient._id}
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        padding: '12px',
+                        background: '#f8f9fa',
+                        borderRadius: '8px',
+                        border: '1px solid #e0e0e0'
+                      }}
+                    >
+                      <div>
+                        <strong style={{ color: '#667eea' }}>{recipient.email}</strong>
+                        {recipient.name && (
+                          <span style={{ color: '#666', marginLeft: '10px' }}>({recipient.name})</span>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDeleteEmail(recipient._id)}
+                        style={{
+                          padding: '6px 12px',
+                          background: '#dc3545',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '12px'
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <p style={{ marginTop: '15px', color: '#999', fontStyle: 'italic' }}>
+                No email recipients configured. Add recipients above to receive alert notifications.
+              </p>
             )}
           </div>
         </div>

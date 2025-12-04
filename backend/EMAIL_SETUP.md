@@ -12,6 +12,8 @@ The system sends email notifications when:
 
 ## Email Configuration
 
+### Step 1: Configure SMTP Server
+
 Add the following environment variables to your `.env` file:
 
 ```env
@@ -19,10 +21,18 @@ Add the following environment variables to your `.env` file:
 EMAIL_HOST=smtp.gmail.com              # SMTP server hostname
 EMAIL_PORT=587                         # SMTP port (587 for TLS, 465 for SSL)
 EMAIL_SECURE=false                     # true for SSL (port 465), false for TLS (port 587)
-EMAIL_USER=your-email@gmail.com        # Your email address
+EMAIL_USER=your-email@gmail.com        # Your email address (sender)
 EMAIL_PASS=your-app-password          # Your email password or app password
-EMAIL_RECIPIENT=recipient@email.com   # Recipient email (optional, defaults to EMAIL_USER)
 ```
+
+**Note**: `EMAIL_RECIPIENT` is no longer needed. Recipients are managed through the web dashboard.
+
+### Step 2: Add Email Recipients via Web Dashboard
+
+1. Log in to the dashboard
+2. Go to the "📧 Email Alert Recipients" section
+3. Add email addresses that should receive alerts
+4. You can add multiple recipients - all will receive notifications
 
 ## Gmail Setup (Example)
 
@@ -41,8 +51,9 @@ EMAIL_PORT=587
 EMAIL_SECURE=false
 EMAIL_USER=yourname@gmail.com
 EMAIL_PASS=xxxx xxxx xxxx xxxx  # App password (16 characters, spaces optional)
-EMAIL_RECIPIENT=alerts@yourdomain.com
 ```
+
+Then add recipients through the web dashboard (no need to set EMAIL_RECIPIENT).
 
 ## Other Email Providers
 
@@ -77,8 +88,16 @@ After configuring email settings, restart your backend server. You should see:
 
 ## Alert Behavior
 
+- **Multiple Recipients**: All active email recipients in the database will receive alert notifications
 - **Duplicate Prevention**: Each alert type is sent only once per condition. The alert resets when the condition returns to normal.
-- **Example**: If temperature goes above 40°C, an email is sent. Another email won't be sent until temperature drops below 40°C and then goes above again.
+- **Example**: If temperature goes above 40°C, an email is sent to all recipients. Another email won't be sent until temperature drops below 40°C and then goes above again.
+
+## Managing Recipients
+
+Email recipients are managed through the web dashboard:
+- **Add Recipients**: Enter email address (and optional name) in the dashboard
+- **Remove Recipients**: Click "Remove" button next to any recipient
+- **Multiple Recipients**: Add as many email addresses as needed - all will receive alerts
 
 ## Troubleshooting
 
