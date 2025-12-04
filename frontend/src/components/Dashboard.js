@@ -24,10 +24,10 @@ const Dashboard = () => {
     fetchLatestDataAllNodes();
     fetchEmailRecipients();
 
-    // Auto-refresh every 300ms for real-time updates (no delay)
+    // Auto-refresh every 200ms for real-time updates (reduced delay)
     const interval = setInterval(() => {
       fetchLatestDataAllNodes();
-    }, 300);
+    }, 200);
 
     setRefreshInterval(interval);
     console.log('[Dashboard] Auto-refresh interval started (300ms - real-time)');
@@ -389,17 +389,26 @@ const Dashboard = () => {
                     <div className="sensor-row">
                       <span className="sensor-label">💨 Gas:</span>
                       <span className="sensor-value">
-                        {room1Data.gas !== undefined 
+                        {room1Data.gasSensorConnected === false ? (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
+                        ) : room1Data.gas !== undefined 
                           ? (typeof room1Data.gas === 'boolean' 
                               ? (room1Data.gas ? 'Alert' : 'OK')
                               : (typeof room1Data.gas === 'number' ? room1Data.gas.toFixed(1) + '%' : 'N/A'))
                           : 'N/A'}
+                        {room1Data.gasRaw !== undefined && room1Data.gasSensorConnected && (
+                          <span style={{ fontSize: '11px', color: '#888', marginLeft: '8px' }}>
+                            (Raw: {room1Data.gasRaw})
+                          </span>
+                        )}
                       </span>
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">💧 Water Sensor:</span>
                       <span className={`sensor-value ${room1Data.waterLevel > 0 ? 'motion-detected' : ''}`}>
-                        {room1Data.waterLevel !== undefined 
+                        {room1Data.rainSensorConnected === false ? (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
+                        ) : room1Data.waterLevel !== undefined 
                           ? (room1Data.waterLevel > 0 ? 'Wet' : 'Dry')
                           : 'N/A'}
                       </span>
@@ -464,17 +473,26 @@ const Dashboard = () => {
                     <div className="sensor-row">
                       <span className="sensor-label">💨 Gas:</span>
                       <span className="sensor-value">
-                        {room2Data.gas !== undefined 
+                        {room2Data.gasSensorConnected === false ? (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
+                        ) : room2Data.gas !== undefined 
                           ? (typeof room2Data.gas === 'boolean' 
                               ? (room2Data.gas ? 'Alert' : 'OK')
                               : (typeof room2Data.gas === 'number' ? room2Data.gas.toFixed(1) + '%' : 'N/A'))
                           : 'N/A'}
+                        {room2Data.gasRaw !== undefined && room2Data.gasSensorConnected && (
+                          <span style={{ fontSize: '11px', color: '#888', marginLeft: '8px' }}>
+                            (Raw: {room2Data.gasRaw})
+                          </span>
+                        )}
                       </span>
                     </div>
                     <div className="sensor-row">
                       <span className="sensor-label">💧 Water Sensor:</span>
                       <span className={`sensor-value ${room2Data.waterLevel > 0 ? 'motion-detected' : ''}`}>
-                        {room2Data.waterLevel !== undefined 
+                        {room2Data.rainSensorConnected === false ? (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
+                        ) : room2Data.waterLevel !== undefined 
                           ? (room2Data.waterLevel > 0 ? 'Wet' : 'Dry')
                           : 'N/A'}
                       </span>
@@ -530,14 +548,23 @@ const Dashboard = () => {
                       <td>{item.temperature !== undefined && typeof item.temperature === 'number' ? `${item.temperature.toFixed(1)}°C` : '-'}</td>
                       <td>{item.humidity !== undefined && typeof item.humidity === 'number' ? `${item.humidity.toFixed(1)}%` : '-'}</td>
                       <td>
-                        {item.gas !== undefined 
+                        {item.gasSensorConnected === false ? (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
+                        ) : item.gas !== undefined 
                           ? (typeof item.gas === 'boolean' 
                               ? (item.gas ? 'Alert' : 'OK')
                               : (typeof item.gas === 'number' ? `${item.gas.toFixed(1)}%` : '-'))
                           : '-'}
+                        {item.gasRaw !== undefined && item.gasSensorConnected && (
+                          <span style={{ fontSize: '11px', color: '#888', marginLeft: '5px' }}>
+                            (Raw: {item.gasRaw})
+                          </span>
+                        )}
                       </td>
                       <td>
-                        {item.waterLevel !== undefined 
+                        {item.rainSensorConnected === false ? (
+                          <span style={{ color: '#999', fontStyle: 'italic' }}>Not Connected</span>
+                        ) : item.waterLevel !== undefined 
                           ? (item.waterLevel > 0 ? 'Wet' : 'Dry')
                           : '-'}
                       </td>

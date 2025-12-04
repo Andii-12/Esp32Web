@@ -291,6 +291,9 @@ router.post('/public/room', async (req, res) => {
       motion, 
       rain, 
       gas, 
+      gas_raw,
+      rain_sensor_connected,
+      gas_sensor_connected,
       battery,
       ts 
     } = req.body;
@@ -376,7 +379,10 @@ router.post('/public/room', async (req, res) => {
       humidity,
       motion: motion === 1,
       gas: gas === 1,
+      gasRaw: gas_raw !== undefined ? parseInt(gas_raw) : undefined,
       waterLevel: rain === 1 ? 100 : 0,
+      rainSensorConnected: rain_sensor_connected === 1,
+      gasSensorConnected: gas_sensor_connected === 1,
       battery: battery !== undefined ? parseFloat(battery) : undefined,
       timestamp: now.toISOString(), // Use server time, convert to ISO string
       receivedAt: now.toISOString(), // Server time when data was received
@@ -386,6 +392,10 @@ router.post('/public/room', async (req, res) => {
     console.log('✅ Data stored in memory (real-time)');
     console.log('Node ID:', nodeId);
     console.log('Sensor values - Rain:', rain, '(waterLevel:', rain === 1 ? 100 : 0, '), Gas:', gas);
+    console.log('Sensor status - Rain connected:', rain_sensor_connected === 1, ', Gas connected:', gas_sensor_connected === 1);
+    if (gas_raw !== undefined) {
+      console.log('Gas raw reading:', gas_raw);
+    }
     console.log('=========================\n');
 
     res.status(201).json({

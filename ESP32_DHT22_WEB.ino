@@ -161,7 +161,7 @@ void sendToWeb(float temperature, float humidity) {
 
   WiFiClientSecure client;
   client.setInsecure(); // For Railway HTTPS (uses Let's Encrypt)
-  client.setTimeout(15);
+  client.setTimeout(5); // Reduced timeout for faster response
 
   HTTPClient http;
   
@@ -169,19 +169,19 @@ void sendToWeb(float temperature, float humidity) {
   int beginAttempts = 0;
   bool httpBeginSuccess = false;
   
-  while (beginAttempts < 3 && !httpBeginSuccess) {
+  while (beginAttempts < 2 && !httpBeginSuccess) {
     httpBeginSuccess = http.begin(client, SERVER_URL);
     if (!httpBeginSuccess) {
       beginAttempts++;
       Serial.print("HTTP begin attempt ");
       Serial.print(beginAttempts);
       Serial.println(" failed, retrying...");
-      delay(500);
+      delay(100); // Reduced retry delay
     }
   }
   
   if (!httpBeginSuccess) {
-    Serial.println("❌ HTTP begin failed after 3 attempts");
+    Serial.println("❌ HTTP begin failed after 2 attempts");
     lastSendSuccess = false;
     return;
   }
@@ -191,7 +191,7 @@ void sendToWeb(float temperature, float humidity) {
     http.addHeader("X-API-Key", API_KEY);
   }
   
-  http.setTimeout(15000);
+  http.setTimeout(5000); // Reduced timeout for faster response (5 seconds)
   http.setReuse(false);
 
   // Read battery percentage
@@ -239,6 +239,18 @@ void sendToWeb(float temperature, float humidity) {
   body += "\"motion\":0,";  // No motion sensor
   body += "\"rain\":" + String(rainValue) + ",";
   body += "\"gas\":" + String(gasValue) + ",";
+  // Add sensor connection status
+  #if RAIN_SENSOR_PIN >= 0
+    body += "\"rain_sensor_connected\":1,";
+  #else
+    body += "\"rain_sensor_connected\":0,";
+  #endif
+  #if GAS_SENSOR_PIN >= 0
+    body += "\"gas_sensor_connected\":1,";
+    body += "\"gas_raw\":" + String(gasReading) + ",";
+  #else
+    body += "\"gas_sensor_connected\":0,";
+  #endif
   if (batteryPercent >= 0) {
     body += "\"battery\":" + String(batteryPercent, 1) + ",";
   }
@@ -252,11 +264,11 @@ void sendToWeb(float temperature, float humidity) {
   Serial.print(", Gas: ");
   Serial.println(gasValue);
 
-  // Try POST with retries
+  // Try POST with retries (reduced for faster response)
   int code = -1;
   int postAttempts = 0;
   
-  while (postAttempts < 3 && code <= 0) {
+  while (postAttempts < 2 && code <= 0) {
     code = http.POST(body);
     postAttempts++;
     
@@ -265,8 +277,8 @@ void sendToWeb(float temperature, float humidity) {
       Serial.print(postAttempts);
       Serial.print(" failed with code: ");
       Serial.println(code);
-      if (postAttempts < 3) {
-        delay(1000);
+      if (postAttempts < 2) {
+        delay(200); // Reduced retry delay
       }
     }
   }
@@ -290,7 +302,7 @@ void sendToWeb(float temperature, float humidity) {
       lastSendSuccess = false;
     }
   } else {
-    Serial.print("❌ POST failed after 3 attempts: ");
+    Serial.print("❌ POST failed after 2 attempts: ");
     Serial.println(http.errorToString(code));
     lastSendSuccess = false;
   }
@@ -366,8 +378,10 @@ void setup() {
 void loop() {
   unsigned long now = millis();
   
-  // Check WiFi connection periodically
-  if (now % 60000 == 0) { // Check every 60 seconds
+  // Check WiFi connection periodically (non-blocking check)
+  static unsigned long lastWiFiCheck = 0;
+  if (now - lastWiFiCheck >= 30000) { // Check every 30 seconds (reduced from 60)
+    lastWiFiCheck = now;
     if (WiFi.status() != WL_CONNECTED) {
       wifiConnected = false;
       wifiConnect();
@@ -423,6 +437,6 @@ void loop() {
     }
   }
   
-  delay(100); // Small delay to prevent watchdog issues
+  delay(10); // Reduced delay for faster loop (still prevents watchdog issues)
 }
 
