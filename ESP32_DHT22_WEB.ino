@@ -16,7 +16,9 @@
 // Additional Sensors (set to -1 if not connected)
 #define RAIN_SENSOR_PIN 35    // Rain sensor pin (GPIO35 - ADC1_CH7) - Set to -1 to disable
 #define GAS_SENSOR_PIN 36     // MQ2 gas sensor pin (GPIO36 - ADC1_CH0) - Set to -1 to disable
-#define GAS_THRESHOLD 1000    // Gas sensor threshold (adjust based on your sensor calibration)
+#define GAS_THRESHOLD 500     // Gas sensor threshold (adjust based on your sensor calibration)
+                              // Typical MQ2 readings: 0-100 (clean air), 200-500 (some gas), 500+ (high gas)
+                              // Lower this value if gas is not being detected, raise if false positives
 
 // WiFi and Server Settings
 const char* WIFI_SSID  = "iPhone";  // Change to your WiFi SSID
@@ -198,9 +200,17 @@ void sendToWeb(float temperature, float humidity) {
   // Read rain sensor (digital: HIGH = dry, LOW = wet)
   int rainValue = 0;
   #if RAIN_SENSOR_PIN >= 0
-    rainValue = digitalRead(RAIN_SENSOR_PIN);
+    int rainReading = digitalRead(RAIN_SENSOR_PIN);
     // Invert logic: if sensor reads LOW, it means rain detected
-    rainValue = (rainValue == LOW) ? 1 : 0;
+    rainValue = (rainReading == LOW) ? 1 : 0;
+    Serial.print("Rain sensor (pin ");
+    Serial.print(RAIN_SENSOR_PIN);
+    Serial.print("): ");
+    Serial.print(rainReading == HIGH ? "HIGH (dry)" : "LOW (wet)");
+    Serial.print(" -> rain=");
+    Serial.println(rainValue);
+  #else
+    Serial.println("Rain sensor disabled (RAIN_SENSOR_PIN = -1)");
   #endif
 
   // Read MQ2 gas sensor (analog: higher value = more gas)
@@ -209,6 +219,16 @@ void sendToWeb(float temperature, float humidity) {
     int gasReading = analogRead(GAS_SENSOR_PIN);
     // Convert to binary: 1 if gas detected above threshold, 0 otherwise
     gasValue = (gasReading > GAS_THRESHOLD) ? 1 : 0;
+    Serial.print("Gas sensor (pin ");
+    Serial.print(GAS_SENSOR_PIN);
+    Serial.print("): ");
+    Serial.print(gasReading);
+    Serial.print(" (threshold: ");
+    Serial.print(GAS_THRESHOLD);
+    Serial.print(") -> gas=");
+    Serial.println(gasValue);
+  #else
+    Serial.println("Gas sensor disabled (GAS_SENSOR_PIN = -1)");
   #endif
 
   // Create JSON payload matching backend format
@@ -227,6 +247,10 @@ void sendToWeb(float temperature, float humidity) {
 
   Serial.print("Payload: ");
   Serial.println(body);
+  Serial.print("Sensor values - Rain: ");
+  Serial.print(rainValue);
+  Serial.print(", Gas: ");
+  Serial.println(gasValue);
 
   // Try POST with retries
   int code = -1;
@@ -293,16 +317,23 @@ void setup() {
   #if RAIN_SENSOR_PIN >= 0
     pinMode(RAIN_SENSOR_PIN, INPUT_PULLUP);
     Serial.println("Rain sensor initialized on pin " + String(RAIN_SENSOR_PIN));
+    Serial.println("  - HIGH = dry, LOW = wet (rain detected)");
+    Serial.println("  - If sensor not connected, pin will read HIGH (dry)");
   #else
-    Serial.println("Rain sensor disabled");
+    Serial.println("Rain sensor disabled (set RAIN_SENSOR_PIN to -1)");
   #endif
 
   #if GAS_SENSOR_PIN >= 0
     pinMode(GAS_SENSOR_PIN, INPUT);
     Serial.println("MQ2 gas sensor initialized on pin " + String(GAS_SENSOR_PIN));
-    Serial.println("Gas threshold: " + String(GAS_THRESHOLD));
+    Serial.println("  - Gas threshold: " + String(GAS_THRESHOLD));
+    Serial.println("  - Reading above threshold = gas detected");
+    Serial.println("  - Typical readings: 0-100 (clean), 200-500 (some gas), 500+ (high)");
+    // Read initial value for calibration check
+    int initialGasReading = analogRead(GAS_SENSOR_PIN);
+    Serial.println("  - Initial reading: " + String(initialGasReading));
   #else
-    Serial.println("Gas sensor disabled");
+    Serial.println("Gas sensor disabled (set GAS_SENSOR_PIN to -1)");
   #endif
 
   // OLED

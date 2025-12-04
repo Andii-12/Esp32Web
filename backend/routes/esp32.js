@@ -385,6 +385,7 @@ router.post('/public/room', async (req, res) => {
     
     console.log('✅ Data stored in memory (real-time)');
     console.log('Node ID:', nodeId);
+    console.log('Sensor values - Rain:', rain, '(waterLevel:', rain === 1 ? 100 : 0, '), Gas:', gas);
     console.log('=========================\n');
 
     res.status(201).json({
