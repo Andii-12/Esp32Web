@@ -13,6 +13,11 @@
 #define SCREEN_HEIGHT 64
 #define OLED_ADDR 0x3C     // Common I2C address for 128x64 SSD1306
 
+// Additional Sensors (set to -1 if not connected)
+#define RAIN_SENSOR_PIN 35    // Rain sensor pin (GPIO35 - ADC1_CH7) - Set to -1 to disable
+#define GAS_SENSOR_PIN 36     // MQ2 gas sensor pin (GPIO36 - ADC1_CH0) - Set to -1 to disable
+#define GAS_THRESHOLD 1000    // Gas sensor threshold (adjust based on your sensor calibration)
+
 // WiFi and Server Settings
 const char* WIFI_SSID  = "iPhone";  // Change to your WiFi SSID
 const char* WIFI_PASS  = "qwerty12345";  // Change to your WiFi password
@@ -190,14 +195,30 @@ void sendToWeb(float temperature, float humidity) {
   // Read battery percentage
   float batteryPercent = readBatteryPercentage();
 
+  // Read rain sensor (digital: HIGH = dry, LOW = wet)
+  int rainValue = 0;
+  #if RAIN_SENSOR_PIN >= 0
+    rainValue = digitalRead(RAIN_SENSOR_PIN);
+    // Invert logic: if sensor reads LOW, it means rain detected
+    rainValue = (rainValue == LOW) ? 1 : 0;
+  #endif
+
+  // Read MQ2 gas sensor (analog: higher value = more gas)
+  int gasValue = 0;
+  #if GAS_SENSOR_PIN >= 0
+    int gasReading = analogRead(GAS_SENSOR_PIN);
+    // Convert to binary: 1 if gas detected above threshold, 0 otherwise
+    gasValue = (gasReading > GAS_THRESHOLD) ? 1 : 0;
+  #endif
+
   // Create JSON payload matching backend format
   String body = "{";
   body += "\"room_id\":" + String(ROOM_ID) + ",";
   body += "\"temperature\":" + String(temperature, 1) + ",";
   body += "\"humidity\":" + String(humidity, 1) + ",";
   body += "\"motion\":0,";  // No motion sensor
-  body += "\"rain\":0,";    // No rain sensor
-  body += "\"gas\":0,";     // No gas sensor
+  body += "\"rain\":" + String(rainValue) + ",";
+  body += "\"gas\":" + String(gasValue) + ",";
   if (batteryPercent >= 0) {
     body += "\"battery\":" + String(batteryPercent, 1) + ",";
   }
@@ -267,6 +288,22 @@ void setup() {
   // DHT
   dht.begin();
   Serial.println("DHT22 sensor initialized");
+
+  // Initialize additional sensors
+  #if RAIN_SENSOR_PIN >= 0
+    pinMode(RAIN_SENSOR_PIN, INPUT_PULLUP);
+    Serial.println("Rain sensor initialized on pin " + String(RAIN_SENSOR_PIN));
+  #else
+    Serial.println("Rain sensor disabled");
+  #endif
+
+  #if GAS_SENSOR_PIN >= 0
+    pinMode(GAS_SENSOR_PIN, INPUT);
+    Serial.println("MQ2 gas sensor initialized on pin " + String(GAS_SENSOR_PIN));
+    Serial.println("Gas threshold: " + String(GAS_THRESHOLD));
+  #else
+    Serial.println("Gas sensor disabled");
+  #endif
 
   // OLED
   Wire.begin(21, 22); // SDA=21, SCL=22 on ESP32

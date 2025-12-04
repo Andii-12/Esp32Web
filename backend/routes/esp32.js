@@ -1,10 +1,15 @@
 const express = require('express');
 const Esp32Data = require('../models/Esp32Data');
 const auth = require('../middleware/auth');
+const { sendTemperatureAlert, sendRainAlert, sendGasAlert } = require('../services/emailService');
 const router = express.Router();
 
 // In-memory storage for real-time data (no MongoDB persistence)
 const realTimeDataStore = new Map(); // nodeId -> latest data
+
+// Track alert states to prevent duplicate emails
+// Structure: nodeId -> { highTempSent, lowTempSent, rainSent, gasSent }
+const alertStates = new Map();
 
 // Get all ESP32 data (protected) - Real-time from memory (returns latest only)
 router.get('/', auth, async (req, res) => {
@@ -297,6 +302,70 @@ router.post('/public/room', async (req, res) => {
 
     const nodeId = `ROOM_${room_id}`;  // Convert room_id to nodeId format
     const adminId = 'ADMIN_001';        // Default admin ID
+
+    // Initialize alert state for this node if not exists
+    if (!alertStates.has(nodeId)) {
+      alertStates.set(nodeId, {
+        highTempSent: false,
+        lowTempSent: false,
+        rainSent: false,
+        gasSent: false
+      });
+    }
+    const alertState = alertStates.get(nodeId);
+
+    // Check temperature alerts
+    if (temperature !== undefined && temperature !== null) {
+      const temp = parseFloat(temperature);
+      
+      // High temperature alert (> 40°C)
+      if (temp > 40) {
+        if (!alertState.highTempSent) {
+          console.log(`🌡️ High temperature alert: ${temp}°C in Room ${room_id}`);
+          await sendTemperatureAlert(room_id, temp, true);
+          alertState.highTempSent = true;
+        }
+      } else {
+        // Reset alert state when temperature returns to normal
+        alertState.highTempSent = false;
+      }
+
+      // Low temperature alert (< -10°C)
+      if (temp < -10) {
+        if (!alertState.lowTempSent) {
+          console.log(`🌡️ Low temperature alert: ${temp}°C in Room ${room_id}`);
+          await sendTemperatureAlert(room_id, temp, false);
+          alertState.lowTempSent = true;
+        }
+      } else {
+        // Reset alert state when temperature returns to normal
+        alertState.lowTempSent = false;
+      }
+    }
+
+    // Check rain sensor alert
+    if (rain === 1) {
+      if (!alertState.rainSent) {
+        console.log(`🌧️ Rain detected in Room ${room_id}`);
+        await sendRainAlert(room_id);
+        alertState.rainSent = true;
+      }
+    } else {
+      // Reset alert state when rain stops
+      alertState.rainSent = false;
+    }
+
+    // Check gas sensor alert
+    if (gas === 1) {
+      if (!alertState.gasSent) {
+        console.log(`⚠️ Gas detected in Room ${room_id}`);
+        await sendGasAlert(room_id);
+        alertState.gasSent = true;
+      }
+    } else {
+      // Reset alert state when gas is no longer detected
+      alertState.gasSent = false;
+    }
 
     // Store in memory for real-time display (no MongoDB save)
     const now = new Date();

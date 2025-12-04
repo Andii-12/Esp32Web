@@ -64,6 +64,13 @@ NODE_ENV=development
 API_KEY=
 # Optional CORS allow-list (set to your frontend origin in production)
 FRONTEND_URL=
+# Email Configuration (for alerts - see EMAIL_SETUP.md)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+EMAIL_RECIPIENT=recipient@email.com
 ```
 
 Backend (production example for Railway):
@@ -74,6 +81,13 @@ JWT_SECRET=<strong_random_secret>
 NODE_ENV=production
 API_KEY=<set_a_secret_key_for_esp32>
 FRONTEND_URL=https://your-frontend.vercel.app
+# Email Configuration (for alerts)
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_SECURE=false
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
+EMAIL_RECIPIENT=alerts@yourdomain.com
 ```
 
 Frontend (Vercel) – add env var:
@@ -147,6 +161,15 @@ The frontend will run on `http://localhost:3000`
 - View latest data in real-time (auto-refreshes every 5 seconds)
 - View data history in a table format
 - Filter data by device ID
+
+### Email Alerts
+- Automatic email notifications for critical conditions:
+  - **Temperature alerts**: Above 40°C or below -10°C
+  - **Rain sensor alerts**: Water detected
+  - **Gas sensor alerts**: MQ2 gas detection
+- Duplicate prevention (one email per condition)
+- HTML email templates with detailed information
+- See [EMAIL_SETUP.md](backend/EMAIL_SETUP.md) for configuration
 
 ### API Endpoints
 

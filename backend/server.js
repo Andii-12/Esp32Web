@@ -2,10 +2,14 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const { initializeEmailService } = require('./services/emailService');
 
 dotenv.config();
 
 const app = express();
+
+// Initialize email service
+initializeEmailService();
 
 // Middleware
 // Configure CORS for production deployments (Railway + Vercel)
