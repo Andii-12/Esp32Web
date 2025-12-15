@@ -38,9 +38,16 @@ const initializeEmailService = async () => {
       }
     });
 
-    // Verify connection
-    await transporter.verify();
-    console.log('✅ Email service initialized and verified');
+    // Optionally verify connection. We skip hard failure here because some platforms
+    // can block SMTP verification even though sending still works.
+    try {
+      await transporter.verify();
+      console.log('✅ Email service verified with SMTP server');
+    } catch (verifyError) {
+      console.warn('⚠️ Email service verification failed, but continuing anyway:', verifyError.message);
+    }
+
+    console.log('✅ Email service initialized');
     console.log('   Host:', host);
     console.log('   Port:', port);
     console.log('   User:', process.env.EMAIL_USER);
