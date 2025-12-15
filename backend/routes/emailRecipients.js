@@ -1,7 +1,7 @@
 const express = require('express');
 const EmailRecipient = require('../models/EmailRecipient');
 const auth = require('../middleware/auth');
-const { testEmail, initializeEmailService } = require('../services/emailService');
+const { testEmail, initializeEmailService, sendEmailNotification } = require('../services/emailService');
 const router = express.Router();
 
 // Get all email recipients (protected)
@@ -167,15 +167,47 @@ router.post('/test', auth, async (req, res) => {
       });
     }
 
-    // Send test email
-    const testRecipient = email || process.env.EMAIL_USER;
-    const result = await testEmail(testRecipient);
+    let result;
+    let targetDescription;
+
+    if (email) {
+      // If a specific email is provided, send ONLY to that address
+      result = await testEmail(email);
+      targetDescription = email;
+    } else {
+      // Otherwise, send a test email to all current recipients using the normal notification pipeline
+      const subject = '🧪 ESP32 Email Service Test';
+      const message = `
+ESP32 Alert System - Email Test
+
+This is a test email to verify your email configuration is working correctly.
+
+Time: ${new Date().toLocaleString()}
+
+If you received this email, your email service is configured correctly!
+      `.trim();
+      const htmlMessage = `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #667eea;">🧪 ESP32 Alert System - Email Test</h2>
+          <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0;">
+            <p>This is a test email to verify your email configuration is working correctly.</p>
+            <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+            <p style="color: #155724; font-weight: bold;">✅ If you received this email, your email service is configured correctly!</p>
+          </div>
+        </div>
+      `;
+
+      result = await sendEmailNotification(subject, message, htmlMessage);
+      targetDescription = recipientCount === 1 
+        ? '1 configured recipient'
+        : `${recipientCount} configured recipients`;
+    }
 
     res.json({
       success: result.success,
       message: result.success 
-        ? `Test email sent successfully to ${testRecipient}` 
-        : `Failed to send test email: ${result.error}`,
+        ? `Test email sent successfully to ${targetDescription}` 
+        : `Failed to send test email: ${result.error || result.status}`,
       status: emailStatus,
       recipientCount,
       testResult: result
