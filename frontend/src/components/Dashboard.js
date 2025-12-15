@@ -17,8 +17,6 @@ const Dashboard = () => {
   const [newEmailName, setNewEmailName] = useState('');
   const [emailError, setEmailError] = useState('');
   const [emailLoading, setEmailLoading] = useState(false);
-  const [testEmailLoading, setTestEmailLoading] = useState(false);
-  const [testEmailResult, setTestEmailResult] = useState(null);
 
   useEffect(() => {
     console.log('[Dashboard] Component mounted, starting data fetch...');
@@ -203,33 +201,6 @@ const Dashboard = () => {
     }
   };
 
-  // Test email configuration
-  const handleTestEmail = async () => {
-    setTestEmailLoading(true);
-    setTestEmailResult(null);
-    setEmailError('');
-    
-    try {
-      const response = await axios.post('/api/email-recipients/test', {
-        email: newEmail || undefined // Use new email if provided, otherwise use default
-      });
-      setTestEmailResult({
-        success: response.data.success,
-        message: response.data.message,
-        status: response.data.status,
-        recipientCount: response.data.recipientCount
-      });
-    } catch (err) {
-      setTestEmailResult({
-        success: false,
-        message: err.response?.data?.message || 'Failed to test email configuration',
-        error: err.response?.data?.error
-      });
-    } finally {
-      setTestEmailLoading(false);
-    }
-  };
-
   return (
     <div className="dashboard">
       <header className="dashboard-header">
@@ -237,19 +208,9 @@ const Dashboard = () => {
           <h1>ESP32 Data Dashboard</h1>
           <p>Welcome, {user?.username}</p>
         </div>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <button
-            onClick={handleTestEmail}
-            disabled={testEmailLoading}
-            className="logout-button"
-            style={{ backgroundColor: '#28a745' }}
-          >
-            {testEmailLoading ? 'Sending test...' : 'Send Test Email'}
-          </button>
-          <button onClick={logout} className="logout-button">
-            Logout
-          </button>
-        </div>
+        <button onClick={logout} className="logout-button">
+          Logout
+        </button>
       </header>
 
       <div className="dashboard-content">
@@ -283,51 +244,7 @@ const Dashboard = () => {
           <div className="admin-info">
             <p>Manage email addresses that will receive alert notifications</p>
             {emailError && <div className="error-message" style={{ marginTop: '10px' }}>{emailError}</div>}
-            
-            {/* Test Email Button */}
-            <div style={{ marginTop: '15px', marginBottom: '15px' }}>
-              <button
-                onClick={handleTestEmail}
-                disabled={testEmailLoading}
-                style={{
-                  padding: '10px 20px',
-                  background: '#28a745',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  marginRight: '10px'
-                }}
-              >
-                {testEmailLoading ? 'Testing...' : '🧪 Test Email Configuration'}
-              </button>
-              {testEmailResult && (
-                <div style={{
-                  marginTop: '10px',
-                  padding: '12px',
-                  borderRadius: '8px',
-                  background: testEmailResult.success ? '#d4edda' : '#f8d7da',
-                  color: testEmailResult.success ? '#155724' : '#721c24',
-                  border: `1px solid ${testEmailResult.success ? '#c3e6cb' : '#f5c6cb'}`
-                }}>
-                  <strong>{testEmailResult.success ? '✅' : '❌'} {testEmailResult.message}</strong>
-                  {testEmailResult.status && (
-                    <div style={{ marginTop: '8px', fontSize: '12px' }}>
-                      <p><strong>Email Service Status:</strong></p>
-                      <ul style={{ margin: '5px 0', paddingLeft: '20px' }}>
-                        <li>Host: {testEmailResult.status.host}</li>
-                        <li>Port: {testEmailResult.status.port}</li>
-                        <li>User: {testEmailResult.status.user}</li>
-                        <li>Recipients in database: {testEmailResult.recipientCount || 0}</li>
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            
+
             {/* Add Email Form */}
             <form onSubmit={handleAddEmail} style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <input
