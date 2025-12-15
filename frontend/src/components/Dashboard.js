@@ -237,9 +237,19 @@ const Dashboard = () => {
           <h1>ESP32 Data Dashboard</h1>
           <p>Welcome, {user?.username}</p>
         </div>
-        <button onClick={logout} className="logout-button">
-          Logout
-        </button>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <button
+            onClick={handleTestEmail}
+            disabled={testEmailLoading}
+            className="logout-button"
+            style={{ backgroundColor: '#28a745' }}
+          >
+            {testEmailLoading ? 'Sending test...' : 'Send Test Email'}
+          </button>
+          <button onClick={logout} className="logout-button">
+            Logout
+          </button>
+        </div>
       </header>
 
       <div className="dashboard-content">

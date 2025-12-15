@@ -47,11 +47,19 @@ const initializeEmailService = async () => {
   }
 };
 
-// Get all active email recipients from database
+// Get all active email recipients from database, fallback to EMAIL_USER if none
 const getEmailRecipients = async () => {
   try {
     const recipients = await EmailRecipient.find({ active: true }).select('email name');
-    return recipients.map(r => r.email);
+    const emails = recipients.map(r => r.email);
+
+    // Fallback: if no DB recipients but EMAIL_USER is configured, use it
+    if (emails.length === 0 && process.env.EMAIL_USER) {
+      console.log('⚠️ No recipients in DB. Using EMAIL_USER as fallback recipient.');
+      emails.push(process.env.EMAIL_USER);
+    }
+
+    return emails;
   } catch (error) {
     console.error('❌ Error fetching email recipients:', error);
     return [];
