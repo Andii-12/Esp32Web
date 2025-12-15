@@ -6,22 +6,29 @@ let transporter = null;
 
 // Initialize email transporter
 const initializeEmailService = async () => {
-  // Only initialize if email is configured
-  if (!process.env.EMAIL_HOST || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  // Only EMAIL_USER and EMAIL_PASS are strictly required.
+  // Host/port/secure will fall back to sensible defaults (Gmail).
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.log('⚠️ Email service not configured. Email notifications will be disabled.');
     console.log('   Missing:', {
-      EMAIL_HOST: !process.env.EMAIL_HOST,
       EMAIL_USER: !process.env.EMAIL_USER,
       EMAIL_PASS: !process.env.EMAIL_PASS
     });
     return false;
   }
 
+  // Defaults (match Gmail if not provided)
+  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
+  const port = parseInt(process.env.EMAIL_PORT || '587');
+  const secure = process.env.EMAIL_SECURE
+    ? process.env.EMAIL_SECURE === 'true'
+    : port === 465;
+
   try {
     transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: parseInt(process.env.EMAIL_PORT || '587'),
-      secure: process.env.EMAIL_SECURE === 'true', // true for 465, false for other ports
+      host,
+      port,
+      secure, // true for 465, false for other ports
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -34,10 +41,10 @@ const initializeEmailService = async () => {
     // Verify connection
     await transporter.verify();
     console.log('✅ Email service initialized and verified');
-    console.log('   Host:', process.env.EMAIL_HOST);
-    console.log('   Port:', process.env.EMAIL_PORT || '587');
+    console.log('   Host:', host);
+    console.log('   Port:', port);
     console.log('   User:', process.env.EMAIL_USER);
-    console.log('   Secure:', process.env.EMAIL_SECURE === 'true');
+    console.log('   Secure:', secure);
     return true;
   } catch (error) {
     console.error('❌ Error initializing email service:', error.message);
