@@ -13,20 +13,20 @@ The system sends email notifications when:
 
 ## Email Configuration
 
-### Step 1: Configure SMTP Server
+### Step 1: Configure Brevo (recommended – HTTP API, no SMTP ports)
 
-Add the following environment variables to your `.env` file:
+Add the following environment variables to your `.env` / Railway variables:
 
 ```env
-# Email Configuration (for notifications)
-EMAIL_HOST=smtp.gmail.com              # SMTP server hostname
-EMAIL_PORT=587                         # SMTP port (587 for TLS, 465 for SSL)
-EMAIL_SECURE=false                     # true for SSL (port 465), false for TLS (port 587)
-EMAIL_USER=your-email@gmail.com        # Your email address (sender)
-EMAIL_PASS=your-app-password          # Your email password or app password
+# Brevo Email Configuration (recommended)
+BREVO_API_KEY=your_brevo_api_key       # Brevo (Sendinblue) API key
+EMAIL_USER=your-email@example.com      # Sender email (must be a validated sender in Brevo)
 ```
 
-**Note**: `EMAIL_RECIPIENT` is no longer needed. Recipients are managed through the web dashboard.
+The backend now uses Brevo's HTTPS API at `https://api.brevo.com/v3/smtp/email`, which works well on
+platforms (like Railway) that block direct SMTP ports.
+
+**Note**: `EMAIL_RECIPIENT` is not needed. Recipients are managed through the web dashboard.
 
 ### Step 2: Add Email Recipients via Web Dashboard
 

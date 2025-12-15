@@ -1,64 +1,28 @@
-const nodemailer = require('nodemailer');
+const axios = require('axios');
 const EmailRecipient = require('../models/EmailRecipient');
 
-// Create reusable transporter
-let transporter = null;
+// Brevo (Sendinblue) email service using HTTP API (no SMTP/ports needed)
+// Required env vars:
+// - BREVO_API_KEY  (you already added this in Railway)
+// - EMAIL_USER     (used as sender email)
 
-// Initialize email transporter
+const BREVO_API_URL = process.env.BREVO_API_URL || 'https://api.brevo.com/v3/smtp/email';
+
+// Initialize email "service" – for Brevo this just checks config and logs
 const initializeEmailService = async () => {
-  // Only EMAIL_USER and EMAIL_PASS are strictly required.
-  // Host/port/secure will fall back to sensible defaults (Gmail).
-  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+  if (!process.env.BREVO_API_KEY || !process.env.EMAIL_USER) {
     console.log('⚠️ Email service not configured. Email notifications will be disabled.');
     console.log('   Missing:', {
-      EMAIL_USER: !process.env.EMAIL_USER,
-      EMAIL_PASS: !process.env.EMAIL_PASS
+      BREVO_API_KEY: !process.env.BREVO_API_KEY,
+      EMAIL_USER: !process.env.EMAIL_USER
     });
     return false;
   }
 
-  // Defaults (match Gmail if not provided)
-  const host = process.env.EMAIL_HOST || 'smtp.gmail.com';
-  const port = parseInt(process.env.EMAIL_PORT || '587');
-  const secure = process.env.EMAIL_SECURE
-    ? process.env.EMAIL_SECURE === 'true'
-    : port === 465;
-
-  try {
-    transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure, // true for 465, false for other ports
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-      },
-      tls: {
-        rejectUnauthorized: false // Allow self-signed certificates
-      }
-    });
-
-    // Optionally verify connection. We skip hard failure here because some platforms
-    // can block SMTP verification even though sending still works.
-    try {
-      await transporter.verify();
-      console.log('✅ Email service verified with SMTP server');
-    } catch (verifyError) {
-      console.warn('⚠️ Email service verification failed, but continuing anyway:', verifyError.message);
-    }
-
-    console.log('✅ Email service initialized');
-    console.log('   Host:', host);
-    console.log('   Port:', port);
-    console.log('   User:', process.env.EMAIL_USER);
-    console.log('   Secure:', secure);
-    return true;
-  } catch (error) {
-    console.error('❌ Error initializing email service:', error.message);
-    console.error('   Full error:', error);
-    transporter = null;
-    return false;
-  }
+  console.log('✅ Email service (Brevo API) configured');
+  console.log('   API URL:', BREVO_API_URL);
+  console.log('   Sender email:', process.env.EMAIL_USER);
+  return true;
 };
 
 // Get all active email recipients from database, fallback to EMAIL_USER if none
@@ -82,13 +46,10 @@ const getEmailRecipients = async () => {
 
 // Send email notification to all recipients
 const sendEmailNotification = async (subject, message, htmlMessage = null) => {
-  if (!transporter) {
-    console.log('⚠️ Email service not available, skipping email notification');
-    console.log('   Attempting to reinitialize...');
-    const reinit = await initializeEmailService();
-    if (!reinit) {
-      return { success: false, error: 'Email service not configured' };
-    }
+  // Ensure service is configured
+  const ready = await initializeEmailService();
+  if (!ready) {
+    return { success: false, error: 'Email service not configured' };
   }
 
   // Get recipients from database
@@ -101,38 +62,45 @@ const sendEmailNotification = async (subject, message, htmlMessage = null) => {
   }
 
   try {
-    const mailOptions = {
-      from: `"ESP32 Alert System" <${process.env.EMAIL_USER}>`,
-      to: recipients.join(', '), // Send to all recipients
-      subject: subject,
-      text: message,
-      html: htmlMessage || message.replace(/\n/g, '<br>')
+    const payload = {
+      sender: {
+        email: process.env.EMAIL_USER,
+        name: 'ESP32 Alert System'
+      },
+      to: recipients.map(email => ({ email })),
+      subject,
+      textContent: message,
+      htmlContent: htmlMessage || message.replace(/\n/g, '<br>')
     };
 
-    console.log(`📧 Attempting to send email to ${recipients.length} recipient(s)...`);
+    console.log(`📧 Attempting to send email to ${recipients.length} recipient(s) via Brevo...`);
     console.log(`   Subject: ${subject}`);
     console.log(`   Recipients: ${recipients.join(', ')}`);
 
-    // Add a safety timeout so the request doesn't hang forever if SMTP is blocked
     const timeoutMs = parseInt(process.env.EMAIL_TIMEOUT_MS || '15000');
-    const sendPromise = transporter.sendMail(mailOptions);
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`Email send timeout after ${timeoutMs}ms`)), timeoutMs)
-    );
+    const response = await axios.post(BREVO_API_URL, payload, {
+      headers: {
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      timeout: timeoutMs
+    });
 
-    const info = await Promise.race([sendPromise, timeoutPromise]);
-    console.log(`✅ Email sent successfully to ${recipients.length} recipient(s):`, info.messageId);
-    console.log(`   Response: ${info.response}`);
-    return { success: true, messageId: info.messageId, recipients: recipients, response: info.response };
+    console.log('✅ Email sent successfully via Brevo:', response.data.messageId || response.data);
+    return { success: true, response: response.data, recipients };
   } catch (error) {
-    console.error('❌ Error sending email:', error.message);
-    console.error('   Full error:', error);
-    // Try to reinitialize on error
-    if (error.code === 'EAUTH' || error.code === 'ECONNECTION') {
-      console.log('   Authentication or connection error. Attempting to reinitialize...');
-      await initializeEmailService();
+    console.error('❌ Error sending email via Brevo:', error.message);
+    if (error.response) {
+      console.error('   Response status:', error.response.status);
+      console.error('   Response data:', error.response.data);
     }
-    return { success: false, error: error.message, code: error.code };
+    return {
+      success: false,
+      error: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    };
   }
 };
 
@@ -281,11 +249,9 @@ Please check the sensor and take appropriate action.
 
 // Test email function (for testing email configuration)
 const testEmail = async (testRecipient) => {
-  if (!transporter) {
-    const initialized = await initializeEmailService();
-    if (!initialized) {
-      return { success: false, error: 'Email service not configured' };
-    }
+  const ready = await initializeEmailService();
+  if (!ready) {
+    return { success: false, error: 'Email service not configured' };
   }
 
   const subject = '🧪 ESP32 Email Service Test';
@@ -311,29 +277,47 @@ If you received this email, your email service is configured correctly!
   `;
 
   try {
-    const mailOptions = {
-      from: `"ESP32 Alert System" <${process.env.EMAIL_USER}>`,
-      to: testRecipient || process.env.EMAIL_USER,
-      subject: subject,
-      text: message,
-      html: htmlMessage
+    const payload = {
+      sender: {
+        email: process.env.EMAIL_USER,
+        name: 'ESP32 Alert System'
+      },
+      to: [{ email: testRecipient || process.env.EMAIL_USER }],
+      subject,
+      textContent: message,
+      htmlContent: htmlMessage
     };
 
     console.log(`📧 Sending test email to: ${testRecipient || process.env.EMAIL_USER}`);
 
-    // Add a safety timeout specifically for test emails
     const timeoutMs = parseInt(process.env.EMAIL_TEST_TIMEOUT_MS || process.env.EMAIL_TIMEOUT_MS || '15000');
-    const sendPromise = transporter.sendMail(mailOptions);
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error(`Test email timeout after ${timeoutMs}ms`)), timeoutMs)
-    );
+    const response = await axios.post(BREVO_API_URL, payload, {
+      headers: {
+        'api-key': process.env.BREVO_API_KEY,
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      },
+      timeout: timeoutMs
+    });
 
-    const info = await Promise.race([sendPromise, timeoutPromise]);
-    console.log(`✅ Test email sent successfully:`, info.messageId);
-    return { success: true, messageId: info.messageId, recipient: testRecipient || process.env.EMAIL_USER };
+    console.log('✅ Test email sent successfully via Brevo:', response.data.messageId || response.data);
+    return {
+      success: true,
+      response: response.data,
+      recipient: testRecipient || process.env.EMAIL_USER
+    };
   } catch (error) {
-    console.error('❌ Error sending test email:', error.message);
-    return { success: false, error: error.message, code: error.code };
+    console.error('❌ Error sending test email via Brevo:', error.message);
+    if (error.response) {
+      console.error('   Response status:', error.response.status);
+      console.error('   Response data:', error.response.data);
+    }
+    return {
+      success: false,
+      error: error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    };
   }
 };
 
