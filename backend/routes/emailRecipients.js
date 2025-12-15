@@ -137,12 +137,13 @@ router.post('/test', auth, async (req, res) => {
     const { email } = req.body;
     
     // Check email service status
+    // Only EMAIL_USER and EMAIL_PASS are strictly required (host/port/secure have defaults)
     const emailStatus = {
-      configured: !!(process.env.EMAIL_HOST && process.env.EMAIL_USER && process.env.EMAIL_PASS),
-      host: process.env.EMAIL_HOST || 'Not set',
+      configured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+      host: process.env.EMAIL_HOST || 'smtp.gmail.com',
       port: process.env.EMAIL_PORT || '587',
       user: process.env.EMAIL_USER || 'Not set',
-      secure: process.env.EMAIL_SECURE === 'true'
+      secure: process.env.EMAIL_SECURE ? process.env.EMAIL_SECURE === 'true' : false
     };
 
     if (!emailStatus.configured) {
