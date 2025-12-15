@@ -334,8 +334,8 @@ router.post('/public/room', async (req, res) => {
         alertState.highTempSent = false;
       }
 
-      // Low temperature alert (< -10°C)
-      if (temp < -10) {
+      // Low temperature alert (< -5°C)
+      if (temp < -5) {
         if (!alertState.lowTempSent) {
           console.log(`🌡️ Low temperature alert: ${temp}°C in Room ${room_id}`);
           await sendTemperatureAlert(room_id, temp, false);
