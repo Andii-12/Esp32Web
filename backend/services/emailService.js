@@ -112,8 +112,15 @@ const sendEmailNotification = async (subject, message, htmlMessage = null) => {
     console.log(`📧 Attempting to send email to ${recipients.length} recipient(s)...`);
     console.log(`   Subject: ${subject}`);
     console.log(`   Recipients: ${recipients.join(', ')}`);
-    
-    const info = await transporter.sendMail(mailOptions);
+
+    // Add a safety timeout so the request doesn't hang forever if SMTP is blocked
+    const timeoutMs = parseInt(process.env.EMAIL_TIMEOUT_MS || '15000');
+    const sendPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Email send timeout after ${timeoutMs}ms`)), timeoutMs)
+    );
+
+    const info = await Promise.race([sendPromise, timeoutPromise]);
     console.log(`✅ Email sent successfully to ${recipients.length} recipient(s):`, info.messageId);
     console.log(`   Response: ${info.response}`);
     return { success: true, messageId: info.messageId, recipients: recipients, response: info.response };
@@ -313,7 +320,15 @@ If you received this email, your email service is configured correctly!
     };
 
     console.log(`📧 Sending test email to: ${testRecipient || process.env.EMAIL_USER}`);
-    const info = await transporter.sendMail(mailOptions);
+
+    // Add a safety timeout specifically for test emails
+    const timeoutMs = parseInt(process.env.EMAIL_TEST_TIMEOUT_MS || process.env.EMAIL_TIMEOUT_MS || '15000');
+    const sendPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error(`Test email timeout after ${timeoutMs}ms`)), timeoutMs)
+    );
+
+    const info = await Promise.race([sendPromise, timeoutPromise]);
     console.log(`✅ Test email sent successfully:`, info.messageId);
     return { success: true, messageId: info.messageId, recipient: testRecipient || process.env.EMAIL_USER };
   } catch (error) {
