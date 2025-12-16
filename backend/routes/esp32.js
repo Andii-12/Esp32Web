@@ -1,7 +1,7 @@
 const express = require('express');
 const Esp32Data = require('../models/Esp32Data');
 const auth = require('../middleware/auth');
-const { sendTemperatureAlert, sendRainAlert, sendGasAlert, sendHumidityAlert } = require('../services/emailService');
+const { sendTemperatureAlert, sendRainAlert, sendGasAlert, sendHumidityAlert, sendMotionAlert } = require('../services/emailService');
 const router = express.Router();
 
 // In-memory storage for real-time data (no MongoDB persistence)
@@ -313,7 +313,8 @@ router.post('/public/room', async (req, res) => {
         lowTempSent: false,
         highHumiditySent: false,
         rainSent: false,
-        gasSent: false
+        gasSent: false,
+        motionSent: false
       });
     }
     const alertState = alertStates.get(nodeId);
@@ -388,6 +389,27 @@ router.post('/public/room', async (req, res) => {
     } else {
       // Reset alert state when gas is no longer detected
       alertState.gasSent = false;
+    }
+
+    // Check motion sensor alert (only between 10 PM and 6 AM)
+    const motionValue = motion !== undefined && motion !== null ? parseInt(motion) : 0;
+    if (motionValue === 1) {
+      const now = new Date();
+      const currentHour = now.getHours();
+      // Check if current time is between 22:00 (10 PM) and 06:00 (6 AM)
+      const isNightTime = currentHour >= 22 || currentHour < 6;
+      
+      if (isNightTime && !alertState.motionSent) {
+        console.log(`🚶 Nighttime motion detected in Room ${room_id} at ${now.toLocaleString('mn-MN')}`);
+        await sendMotionAlert(room_id);
+        alertState.motionSent = true;
+      } else if (!isNightTime) {
+        // Reset alert state during daytime
+        alertState.motionSent = false;
+      }
+    } else {
+      // Reset alert state when motion is no longer detected
+      alertState.motionSent = false;
     }
 
     // Store in memory for real-time display (no MongoDB save)

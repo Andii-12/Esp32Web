@@ -176,23 +176,23 @@ router.post('/test', auth, async (req, res) => {
       targetDescription = email;
     } else {
       // Otherwise, send a test email to all current recipients using the normal notification pipeline
-      const subject = '🧪 ESP32 Email Service Test';
+      const subject = '🧪 ESP32 Имэйл Үйлчилгээний Туршилт';
       const message = `
-ESP32 Alert System - Email Test
+ESP32 Анхааруулгын Систем - Имэйл Туршилт
 
-This is a test email to verify your email configuration is working correctly.
+Энэ бол таны имэйл тохиргоо зөв ажиллаж байгаа эсэхийг шалгах туршилтын имэйл юм.
 
-Time: ${new Date().toLocaleString()}
+Цаг: ${new Date().toLocaleString('mn-MN')}
 
-If you received this email, your email service is configured correctly!
+Хэрэв та энэ имэйлийг хүлээн авсан бол, таны имэйл үйлчилгээ зөв тохируулагдсан байна!
       `.trim();
       const htmlMessage = `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #667eea;">🧪 ESP32 Alert System - Email Test</h2>
+          <h2 style="color: #667eea;">🧪 ESP32 Анхааруулгын Систем - Имэйл Туршилт</h2>
           <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 15px; margin: 20px 0;">
-            <p>This is a test email to verify your email configuration is working correctly.</p>
-            <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
-            <p style="color: #155724; font-weight: bold;">✅ If you received this email, your email service is configured correctly!</p>
+            <p>Энэ бол таны имэйл тохиргоо зөв ажиллаж байгаа эсэхийг шалгах туршилтын имэйл юм.</p>
+            <p><strong>Цаг:</strong> ${new Date().toLocaleString('mn-MN')}</p>
+            <p style="color: #155724; font-weight: bold;">✅ Хэрэв та энэ имэйлийг хүлээн авсан бол, таны имэйл үйлчилгээ зөв тохируулагдсан байна!</p>
           </div>
         </div>
       `;
