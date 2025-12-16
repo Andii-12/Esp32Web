@@ -391,16 +391,17 @@ router.post('/public/room', async (req, res) => {
       alertState.gasSent = false;
     }
 
-    // Check motion sensor alert (only between 10 PM and 6 AM)
+    // Check motion sensor alert (only between 10 PM and 6 AM, Mongolia time)
     const motionValue = motion !== undefined && motion !== null ? parseInt(motion) : 0;
     if (motionValue === 1) {
-      const now = new Date();
-      const currentHour = now.getHours();
-      // Check if current time is between 22:00 (10 PM) and 06:00 (6 AM)
-      const isNightTime = currentHour >= 22 || currentHour < 6;
+      // Compute current hour in Asia/Ulaanbaatar time zone
+      const mongoliaHour = Number(new Intl.DateTimeFormat('en-US', { hour: 'numeric', hour12: false, timeZone: 'Asia/Ulaanbaatar' }).format(new Date()));
+      const mongoliaNowString = new Date().toLocaleString('mn-MN', { timeZone: 'Asia/Ulaanbaatar' });
+      // Nighttime window: 22:00–06:00 (inclusive of 22:00, exclusive of 06:00)
+      const isNightTime = mongoliaHour >= 22 || mongoliaHour < 6;
       
       if (isNightTime && !alertState.motionSent) {
-        console.log(`🚶 Nighttime motion detected in Room ${room_id} at ${now.toLocaleString('mn-MN')}`);
+        console.log(`🚶 Nighttime motion detected in Room ${room_id} at ${mongoliaNowString} (Asia/Ulaanbaatar)`);
         await sendMotionAlert(room_id);
         alertState.motionSent = true;
       } else if (!isNightTime) {
