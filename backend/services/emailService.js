@@ -118,7 +118,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
 Өрөө: ${roomId}
 Одоогийн Температур: ${temperature}°C
 Босго: ${threshold}
-Төлөв: ${condition} ТЕМПЕРАТУР ИЛРЭЭВ
+Төлөв: ${condition} ТЕМПЕРАТУР ИЛРЭВ
 
 Цаг: ${new Date().toLocaleString('mn-MN')}
 
@@ -133,7 +133,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
         <p><strong>Өрөө:</strong> ${roomId}</p>
         <p><strong>Одоогийн Температур:</strong> <span style="color: #dc3545; font-size: 18px; font-weight: bold;">${temperature}°C</span></p>
         <p><strong>Босго:</strong> ${threshold}</p>
-        <p><strong>Төлөв:</strong> <span style="color: #dc3545; font-weight: bold;">${condition} ТЕМПЕРАТУР ИЛРЭЭВ</span></p>
+        <p><strong>Төлөв:</strong> <span style="color: #dc3545; font-weight: bold;">${condition} ТЕМПЕРАТУР ИЛРЭВ</span></p>
         <p><strong>Цаг:</strong> ${new Date().toLocaleString('mn-MN')}</p>
       </div>
       <p style="color: #666;">Сенсорыг шалгаж, зохих арга хэмжээ аваарай.</p>
@@ -145,7 +145,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
 
 // Send rain alert email
 const sendRainAlert = async (roomId) => {
-  const subject = `🌧️ ESP32 Анхааруулга: Өрөө ${roomId}-д Ус алдалт Илрээв`;
+  const subject = `🌧️ ESP32 Анхааруулга: Өрөө ${roomId}-д Ус алдалт Илрэв`;
   
   const message = `
 ESP32 Анхааруулгын Системийн Мэдэгдэл
@@ -153,7 +153,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
 🌧️ УС АЛДАЛТЫН АНХААРУУЛГА
 
 Өрөө: ${roomId}
-Төлөв: УС АЛДАЛТ ИЛРЭЭВ
+Төлөв: УС АЛДАЛТ ИЛРЭВ
 
 Цаг: ${new Date().toLocaleString('mn-MN')}
 
@@ -166,7 +166,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
       <div style="background-color: #cfe2ff; border-left: 4px solid #0d6efd; padding: 15px; margin: 20px 0;">
         <h3 style="color: #084298; margin-top: 0;">🌧️ УС АЛДАЛТЫН АНХААРУУЛГА</h3>
         <p><strong>Өрөө:</strong> ${roomId}</p>
-        <p><strong>Төлөв:</strong> <span style="color: #084298; font-weight: bold;">УС АЛДАЛТ ИЛРЭЭВ</span></p>
+        <p><strong>Төлөв:</strong> <span style="color: #084298; font-weight: bold;">УС АЛДАЛТ ИЛРЭВ</span></p>
         <p><strong>Цаг:</strong> ${new Date().toLocaleString('mn-MN')}</p>
       </div>
       <p style="color: #666;">Ус алдалт илрүүлсэн. Талбайг шалгаарай.</p>
@@ -178,7 +178,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
 
 // Send gas alert email
 const sendGasAlert = async (roomId) => {
-  const subject = `⚠️ ESP32 Анхааруулга: Өрөө ${roomId}-д Хий Илрээв`;
+  const subject = `⚠️ ESP32 Анхааруулга: Өрөө ${roomId}-д Хий Илрэв`;
   
   const message = `
 ESP32 Анхааруулгын Системийн Мэдэгдэл
@@ -186,7 +186,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
 ⚠️ ХИЙНИЙ СЕНСОРЫН АНХААРУУЛГА
 
 Өрөө: ${roomId}
-Төлөв: ХИЙ ИЛРЭЭВ
+Төлөв: ХИЙ ИЛРЭВ
 
 Цаг: ${new Date().toLocaleString('mn-MN')}
 
@@ -199,7 +199,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
       <div style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0;">
         <h3 style="color: #721c24; margin-top: 0;">⚠️ ХИЙНИЙ СЕНСОРЫН АНХААРУУЛГА</h3>
         <p><strong>Өрөө:</strong> ${roomId}</p>
-        <p><strong>Төлөв:</strong> <span style="color: #dc3545; font-weight: bold; font-size: 18px;">ХИЙ ИЛРЭЭВ</span></p>
+        <p><strong>Төлөв:</strong> <span style="color: #dc3545; font-weight: bold; font-size: 18px;">ХИЙ ИЛРЭВ</span></p>
         <p><strong>Цаг:</strong> ${new Date().toLocaleString('mn-MN')}</p>
       </div>
       <p style="color: #721c24; font-weight: bold;">АНХААРУУЛГА: MQ2 хийн сенсор хий илрүүлсэн. Талбайг яаралтай шалгаж, зохих агааржуулалтыг хангаарай.</p>
@@ -222,7 +222,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
 Өрөө: ${roomId}
 Одоогийн Чийгшил: ${humidity}%
 Босго: ${threshold}
-Төлөв: ӨНДӨР ЧИЙГШИЛ ИЛРЭЭВ
+Төлөв: ӨНДӨР ЧИЙГШИЛ ИЛРЭВ
 
 Цаг: ${new Date().toLocaleString('mn-MN')}
 
@@ -237,7 +237,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
         <p><strong>Өрөө:</strong> ${roomId}</p>
         <p><strong>Одоогийн Чийгшил:</strong> <span style="color: #0d6efd; font-size: 18px; font-weight: bold;">${humidity}%</span></p>
         <p><strong>Босго:</strong> ${threshold}</p>
-        <p><strong>Төлөв:</strong> <span style="color: #084298; font-weight: bold;">ӨНДӨР ЧИЙГШИЛ ИЛРЭЭВ</span></p>
+        <p><strong>Төлөв:</strong> <span style="color: #084298; font-weight: bold;">ӨНДӨР ЧИЙГШИЛ ИЛРЭВ</span></p>
         <p><strong>Цаг:</strong> ${new Date().toLocaleString('mn-MN')}</p>
       </div>
       <p style="color: #666;">Сенсорыг шалгаж, зохих арга хэмжээ аваарай.</p>
@@ -249,7 +249,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
 
 // Send motion alert email (for nighttime motion detection)
 const sendMotionAlert = async (roomId) => {
-  const subject = `🚶 ESP32 Анхааруулга: Өрөө ${roomId}-д Шөнөд Хөдөлгөөн Илрээв`;
+  const subject = `🚶 ESP32 Анхааруулга: Өрөө ${roomId}-д Шөнөд Хөдөлгөөн Илрэв`;
   
   const message = `
 ESP32 Анхааруулгын Системийн Мэдэгдэл
@@ -257,7 +257,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
 🚶 ХӨДӨЛГӨӨНИЙ АНХААРУУЛГА (ШӨНӨД)
 
 Өрөө: ${roomId}
-Төлөв: ШӨНӨД ХӨДӨЛГӨӨН ИЛРЭЭВ
+Төлөв: ШӨНӨД ХӨДӨЛГӨӨН ИЛРЭВ
 
 Цаг: ${new Date().toLocaleString('mn-MN')}
 
@@ -270,7 +270,7 @@ ESP32 Анхааруулгын Системийн Мэдэгдэл
       <div style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0;">
         <h3 style="color: #721c24; margin-top: 0;">🚶 ХӨДӨЛГӨӨНИЙ АНХААРУУЛГА (ШӨНӨД)</h3>
         <p><strong>Өрөө:</strong> ${roomId}</p>
-        <p><strong>Төлөв:</strong> <span style="color: #dc3545; font-weight: bold; font-size: 18px;">ШӨНӨД ХӨДӨЛГӨӨН ИЛРЭЭВ</span></p>
+        <p><strong>Төлөв:</strong> <span style="color: #dc3545; font-weight: bold; font-size: 18px;">ШӨНӨД ХӨДӨЛГӨӨН ИЛРЭВ</span></p>
         <p><strong>Цаг:</strong> ${new Date().toLocaleString('mn-MN')}</p>
       </div>
       <p style="color: #721c24; font-weight: bold;">Шөнийн цагаар (22:00 - 06:00) хөдөлгөөн илрүүлсэн. Талбайг яаралтай шалгаарай.</p>
